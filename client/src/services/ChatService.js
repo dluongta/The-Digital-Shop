@@ -122,6 +122,15 @@ const markMessagesAsRead = (chatRoomId, userId) => {
   return axios.put(`/chatMessage/mark-as-read/${chatRoomId}`, { userId });
 };
 
+  const leaveGroupChat = async (roomId, userId) => {
+    const res = await axios.put(
+      `${baseURL}/room/leave/${roomId}`,
+      { userId },
+      createHeader()
+    );
+    return res.data;
+  };
+
   return {
     initiateSocketConnection,
     getAllUsers,
@@ -132,7 +141,8 @@ const markMessagesAsRead = (chatRoomId, userId) => {
     getMessagesOfChatRoom,
     sendMessage,
     markAllMessagesAsRead,
-    markMessagesAsRead
+    markMessagesAsRead,
+    leaveGroupChat,
   };
 };
 
