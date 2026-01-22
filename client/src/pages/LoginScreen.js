@@ -12,16 +12,16 @@ import {
   login,
   register,
   checkEmailExists,
+  loginWithPasswordFromApi,
 } from '../actions/userActions'
-import { loginWithPasswordFromApi } from '../actions/userActions'
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
   const [password, setPassword] = useState('')
-  const [passwordModal, setPasswordModal] = useState('')
+
   const [showModal, setShowModal] = useState(false)
-  const [userData, setUserData] = useState(null)
+  const [passwordModal, setPasswordModal] = useState('')
+  const [googleUser, setGoogleUser] = useState(null)
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -33,108 +33,72 @@ const LoginScreen = () => {
 
   const userLogin = useSelector((state) => state.userLogin)
   const { loading, error, userInfo } = userLogin
-const handleModalSubmit = async () => {
-  if (!userData || !passwordModal) return
-
-  await dispatch(
-    register(userData.name, userData.email, passwordModal, 'buyer')
-  )
-
-  dispatch(login(userData.email, passwordModal))
-  setShowModal(false)
-}
-
-const handleGoogleCredential = async (credential) => {
-  try {
-    const decoded = jwtDecode(credential)
-    const { email, name } = decoded
-
-    const existsRes = await dispatch(checkEmailExists(email))
-
-    if (existsRes?.exists) {
-      // ✅ ĐÃ CÓ TÀI KHOẢN → LẤY PASS TỪ API → LOGIN
-      dispatch(loginWithPasswordFromApi(email))
-    } else {
-      // 🆕 CHƯA CÓ → MODAL NHẬP PASSWORD
-      setUserData({ email, name })
-      setShowModal(true)
-    }
-  } catch (err) {
-    console.error(err)
-  }
-}
 
   useEffect(() => {
-    if (userInfo) {
-      navigate(redirect)
-    }
+    if (userInfo) navigate(redirect)
   }, [userInfo, navigate, redirect])
 
-  // =========================
-  // GOOGLE LOGIN HANDLER (CHUNG)
-  // =========================
-  // const handleGoogleCredential = async (credential) => {
-  //   try {
-  //     const decoded = jwtDecode(credential)
-  //     const { email, name } = decoded
+  /* =========================
+     GOOGLE HANDLER (CHUNG)
+  ========================= */
+  const handleGoogleCredential = async (credential) => {
+    try {
+      const decoded = jwtDecode(credential)
+      const { email, name } = decoded
 
-  //     setEmail(email)
-  //     setName(name)
+      const existsRes = await dispatch(checkEmailExists(email))
 
-  //     const response = await dispatch(checkEmailExists(email))
-
-  //     if (response?.exists) {
-  //       // login Google user đã tồn tại
-  //       dispatch(login(email, credential)) // backend xử lý credential
-  //     } else {
-  //       // user mới → mở modal nhập password
-  //       setUserData({ email, name })
-  //       setShowModal(true)
-  //     }
-  //   } catch (err) {
-  //     console.error('Google auth error:', err)
-  //   }
-  // }
-
-  // =========================
-  // GOOGLE ONE TAP LOGIN
-  // =========================
-  useGoogleOneTapLogin({
-    disabled: !!userInfo,
-    onSuccess: (res) => {
-      handleGoogleCredential(res.credential)
-    },
-    onError: () => {
-      console.log('Google One Tap failed')
-    },
-  })
-
-  // =========================
-  // GOOGLE BUTTON LOGIN
-  // =========================
-  const handleGoogleLoginSuccess = (credentialResponse) => {
-    if (credentialResponse?.credential) {
-      handleGoogleCredential(credentialResponse.credential)
+      if (existsRes?.exists) {
+        // ✅ ĐÃ CÓ TÀI KHOẢN → LOGIN BẰNG PASS TỪ API
+        dispatch(loginWithPasswordFromApi(email))
+      } else {
+        // 🆕 CHƯA CÓ → MODAL NHẬP PASSWORD
+        setGoogleUser({ email, name })
+        setShowModal(true)
+      }
+    } catch (err) {
+      console.error(err)
     }
   }
 
-  // =========================
-  // REGISTER FROM MODAL
-  // =========================
-  // const handleModalSubmit = async () => {
-  //   if (!userData || !passwordModal) return
+  /* =========================
+     GOOGLE ONE TAP
+  ========================= */
+  useGoogleOneTapLogin({
+    disabled: !!userInfo,
+    onSuccess: (res) => handleGoogleCredential(res.credential),
+  })
 
-  //   const { email, name } = userData
+  /* =========================
+     GOOGLE BUTTON
+  ========================= */
+  const handleGoogleLoginSuccess = (res) => {
+    if (res?.credential) handleGoogleCredential(res.credential)
+  }
 
-  //   await dispatch(register(name, email, passwordModal, 'buyer'))
-  //   dispatch(login(email, passwordModal))
+  /* =========================
+     REGISTER FROM MODAL
+  ========================= */
+  const handleModalSubmit = async () => {
+    if (!googleUser || !passwordModal) return
 
-  //   setShowModal(false)
-  // }
+    await dispatch(
+      register(
+        googleUser.name,
+        googleUser.email,
+        passwordModal,
+        'buyer'
+      )
+    )
 
-  // =========================
-  // NORMAL LOGIN
-  // =========================
+    dispatch(login(googleUser.email, passwordModal))
+    setShowModal(false)
+    setPasswordModal('')
+  }
+
+  /* =========================
+     NORMAL LOGIN
+  ========================= */
   const submitHandler = (e) => {
     e.preventDefault()
     dispatch(login(email, password))
@@ -147,7 +111,6 @@ const handleGoogleCredential = async (credential) => {
       {error && <Message variant="danger">{error}</Message>}
       {loading && <Loader />}
 
-      {/* GOOGLE LOGIN BUTTON */}
       <div className="mb-3 text-center">
         <GoogleLogin
           onSuccess={handleGoogleLoginSuccess}
@@ -155,61 +118,51 @@ const handleGoogleCredential = async (credential) => {
         />
       </div>
 
-      {/* NORMAL LOGIN FORM */}
       <Form onSubmit={submitHandler}>
-        <Form.Group controlId="email" className="mb-3">
-          <Form.Label>Email Address</Form.Label>
+        <Form.Group className="mb-3">
+          <Form.Label>Email</Form.Label>
           <Form.Control
-            type="email"
-            placeholder="Enter email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </Form.Group>
 
-        <Form.Group controlId="password" className="mb-3">
+        <Form.Group className="mb-3">
           <Form.Label>Password</Form.Label>
           <Form.Control
             type="password"
-            placeholder="Enter password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </Form.Group>
 
-        <Button type="submit" variant="primary">
-          Sign In
-        </Button>
+        <Button type="submit">Login</Button>
       </Form>
 
-      {/* REGISTER LINK */}
       <Row className="py-3">
         <Col>
-          New Customer?{' '}
-          <Link to={redirect ? `/register?redirect=${redirect}` : '/register'}>
-            Register
-          </Link>
+          New Customer? <Link to="/register">Register</Link>
         </Col>
       </Row>
 
-      {/* REGISTER MODAL */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      {/* GOOGLE REGISTER MODAL */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>Set Password</Modal.Title>
+          <Modal.Title>Create account</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <p>
+            Account <strong>{googleUser?.email}</strong> does not exist.
+          </p>
           <Form.Control
             type="password"
-            placeholder="Enter password"
+            placeholder="Set password"
             value={passwordModal}
             onChange={(e) => setPasswordModal(e.target.value)}
           />
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleModalSubmit}>
+          <Button onClick={handleModalSubmit}>
             Register & Login
           </Button>
         </Modal.Footer>

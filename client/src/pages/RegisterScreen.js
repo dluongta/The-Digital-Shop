@@ -12,138 +12,94 @@ import {
   login,
   register,
   checkEmailExists,
+  loginWithPasswordFromApi,
 } from '../actions/userActions'
-import { loginWithPasswordFromApi } from '../actions/userActions'
-
-
 
 const RegisterScreen = () => {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [role, setRole] = useState('buyer')
-  const [message, setMessage] = useState(null)
 
-  const [passwordModal, setPasswordModal] = useState('')
   const [showModal, setShowModal] = useState(false)
-  const [userData, setUserData] = useState(null)
-
-  const [paypalClientId, setPaypalClientId] = useState('')
+  const [passwordModal, setPasswordModal] = useState('')
+  const [googleUser, setGoogleUser] = useState(null)
 
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
 
+  const redirect = new URLSearchParams(location.search).get('redirect') || '/'
+
   const userRegister = useSelector((state) => state.userRegister)
   const { loading, error, userInfo } = userRegister
 
-  const redirect = new URLSearchParams(location.search).get('redirect') || '/'
-const handleGoogleCredential = async (credential) => {
-  const decoded = jwtDecode(credential)
-  const { email, name } = decoded
-
-  const res = await dispatch(checkEmailExists(email))
-
-  if (res?.exists) {
-    dispatch(loginWithPasswordFromApi(email))
-    navigate('/')
-  } else {
-    setUserData({ email, name })
-    setShowModal(true)
-  }
-}
   useEffect(() => {
-    if (userInfo) {
-      navigate(redirect)
-    }
+    if (userInfo) navigate(redirect)
   }, [userInfo, navigate, redirect])
 
-  // =========================
-  // GOOGLE HANDLER (DÙNG CHUNG)
-  // =========================
-  // const handleGoogleCredential = async (credential) => {
-  //   try {
-  //     const decoded = jwtDecode(credential)
-  //     const { email, name } = decoded
+  /* =========================
+     GOOGLE HANDLER
+  ========================= */
+  const handleGoogleCredential = async (credential) => {
+    const decoded = jwtDecode(credential)
+    const { email, name } = decoded
 
-  //     setEmail(email)
-  //     setName(name)
+    const existsRes = await dispatch(checkEmailExists(email))
 
-  //     const response = await dispatch(checkEmailExists(email))
-
-  //     if (response?.exists) {
-  //       dispatch(login(email, credential))
-  //       navigate('/')
-  //     } else {
-  //       setUserData({ email, name })
-  //       setShowModal(true)
-  //     }
-  //   } catch (err) {
-  //     console.error('Google auth error:', err)
-  //   }
-  // }
-
-  // =========================
-  // GOOGLE ONE TAP LOGIN
-  // =========================
-  useGoogleOneTapLogin({
-    disabled: !!userInfo,
-    onSuccess: (res) => {
-      handleGoogleCredential(res.credential)
-    },
-    onError: () => {
-      console.log('Google One Tap failed')
-    },
-  })
-
-  // =========================
-  // GOOGLE BUTTON LOGIN
-  // =========================
-  const handleGoogleLoginSuccess = (credentialResponse) => {
-    if (credentialResponse?.credential) {
-      handleGoogleCredential(credentialResponse.credential)
+    if (existsRes?.exists) {
+      dispatch(loginWithPasswordFromApi(email))
+    } else {
+      setGoogleUser({ email, name })
+      setShowModal(true)
     }
   }
 
-  // =========================
-  // MODAL SUBMIT (REGISTER)
-  // =========================
-  const handleModalSubmit = async () => {
-    if (!userData || !passwordModal) return
+  useGoogleOneTapLogin({
+    disabled: !!userInfo,
+    onSuccess: (res) => handleGoogleCredential(res.credential),
+  })
 
-    const { email, name } = userData
+  const handleGoogleLoginSuccess = (res) => {
+    if (res?.credential) handleGoogleCredential(res.credential)
+  }
+
+  /* =========================
+     MODAL REGISTER
+  ========================= */
+  const handleModalSubmit = async () => {
+    if (!googleUser || !passwordModal) return
 
     await dispatch(
-      register(name, email, passwordModal, 'buyer', paypalClientId)
+      register(
+        googleUser.name,
+        googleUser.email,
+        passwordModal,
+        'buyer'
+      )
     )
-    dispatch(login(email, passwordModal))
 
+    dispatch(login(googleUser.email, passwordModal))
     setShowModal(false)
   }
 
-  // =========================
-  // NORMAL REGISTER
-  // =========================
+  /* =========================
+     NORMAL REGISTER
+  ========================= */
   const submitHandler = (e) => {
     e.preventDefault()
 
-    if (password !== confirmPassword) {
-      setMessage('Passwords do not match')
-    } else {
-      dispatch(register(name, email, password, role, paypalClientId))
-    }
+    if (password !== confirmPassword) return
+    dispatch(register(name, email, password, 'buyer'))
   }
 
   return (
     <FormContainer>
-      <h1>Sign Up</h1>
+      <h1>Register</h1>
 
-      {message && <Message variant="danger">{message}</Message>}
       {error && <Message variant="danger">{error}</Message>}
       {loading && <Loader />}
 
-      {/* GOOGLE LOGIN BUTTON */}
       <div className="mb-3 text-center">
         <GoogleLogin
           onSuccess={handleGoogleLoginSuccess}
@@ -151,102 +107,61 @@ const handleGoogleCredential = async (credential) => {
         />
       </div>
 
-      {/* REGISTER FORM */}
       <Form onSubmit={submitHandler}>
-        <Form.Group controlId="name" className="mb-2">
-          <Form.Label>Name</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </Form.Group>
+        <Form.Control
+          className="mb-2"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-        <Form.Group controlId="email" className="mb-2">
-          <Form.Label>Email</Form.Label>
-          <Form.Control
-            type="email"
-            placeholder="Enter email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </Form.Group>
+        <Form.Control
+          className="mb-2"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
-        <Form.Group controlId="password" className="mb-2">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </Form.Group>
+        <Form.Control
+          className="mb-2"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-        <Form.Group controlId="confirmPassword" className="mb-2">
-          <Form.Label>Confirm Password</Form.Label>
-          <Form.Control
-            type="password"
-            placeholder="Confirm password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </Form.Group>
+        <Form.Control
+          className="mb-3"
+          type="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
 
-        <Form.Group controlId="role" className="mb-2">
-          <Form.Label>Role</Form.Label>
-          <Form.Control
-            as="select"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="buyer">Buyer</option>
-            <option value="seller">Seller</option>
-          </Form.Control>
-        </Form.Group>
-
-        <Form.Group controlId="paypalClientId" className="mb-3">
-          <Form.Label>PayPal Client ID (Optional)</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="Enter PayPal Client ID"
-            value={paypalClientId}
-            onChange={(e) => setPaypalClientId(e.target.value)}
-          />
-        </Form.Group>
-
-        <Button type="submit" variant="primary">
-          Register
-        </Button>
+        <Button type="submit">Register</Button>
       </Form>
 
       <Row className="py-3">
         <Col>
-          Have an account?{' '}
-          <Link to={redirect ? `/login?redirect=${redirect}` : '/login'}>
-            Login
-          </Link>
+          Already have account? <Link to="/login">Login</Link>
         </Col>
       </Row>
 
       {/* GOOGLE REGISTER MODAL */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Set Password</Modal.Title>
+          <Modal.Title>Create account</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Control
             type="password"
-            placeholder="Enter password"
+            placeholder="Set password"
             value={passwordModal}
             onChange={(e) => setPasswordModal(e.target.value)}
           />
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleModalSubmit}>
+          <Button onClick={handleModalSubmit}>
             Register & Login
           </Button>
         </Modal.Footer>
