@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Container, Form, Row, Col, Button } from 'react-bootstrap'
+import { Container, Form, Row, Col, Button, Modal } from 'react-bootstrap'
 import { useGoogleOneTapLogin } from '@react-oauth/google'
 import { jwtDecode } from 'jwt-decode'
 
@@ -21,10 +21,20 @@ const HomeScreen = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
+  // =========================
+  // FILTER STATE
+  // =========================
   const searchParams = new URLSearchParams(location.search)
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
   const [sort, setSort] = useState(searchParams.get('sort') || '')
+
+  // =========================
+  // GOOGLE REGISTER MODAL
+  // =========================
+  const [showModal, setShowModal] = useState(false)
+  const [googleUser, setGoogleUser] = useState(null)
+  const [passwordModal, setPasswordModal] = useState('')
 
   const { loading, error, products = [], page = 1, pages = 1 } =
     useSelector((state) => state.productList)
@@ -51,13 +61,16 @@ const HomeScreen = () => {
         const existsRes = await dispatch(checkEmailExists(email))
 
         if (existsRes?.exists) {
+          // 🔐 Login user đã tồn tại
           const password = await fetch(`/api/users/password/${email}`)
             .then((r) => r.json())
             .then((d) => d.password)
 
           dispatch(login(email, password))
         } else {
-          dispatch(register(name, email, res.credential, 'buyer'))
+          // 🆕 User mới → mở modal nhập password
+          setGoogleUser({ name, email })
+          setShowModal(true)
         }
       } catch (err) {
         console.error('Google One Tap error:', err)
@@ -65,6 +78,26 @@ const HomeScreen = () => {
     },
     onError: () => console.log('Google One Tap failed'),
   })
+
+  // =========================
+  // REGISTER FROM MODAL
+  // =========================
+  const handleRegisterFromGoogle = async () => {
+    if (!passwordModal || !googleUser) return
+
+    await dispatch(
+      register(
+        googleUser.name,
+        googleUser.email,
+        passwordModal,
+        'buyer'
+      )
+    )
+
+    dispatch(login(googleUser.email, passwordModal))
+    setShowModal(false)
+    setPasswordModal('')
+  }
 
   // =========================
   // FILTER SUBMIT
@@ -116,7 +149,6 @@ const HomeScreen = () => {
             </Col>
 
             <Col md={3}>
-              {/* 🔥 FIX QUAN TRỌNG Ở ĐÂY */}
               <Form.Control
                 as="select"
                 value={sort}
@@ -147,6 +179,38 @@ const HomeScreen = () => {
           </>
         )}
       </Container>
+
+      {/* =========================
+          GOOGLE REGISTER MODAL
+      ========================= */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Create account</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <p>
+            Account <strong>{googleUser?.email}</strong> chưa tồn tại.  
+            Vui lòng nhập password để tạo tài khoản.
+          </p>
+
+          <Form.Control
+            type="password"
+            placeholder="Enter password"
+            value={passwordModal}
+            onChange={(e) => setPasswordModal(e.target.value)}
+          />
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleRegisterFromGoogle}>
+            Register & Login
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   )
 }
