@@ -152,7 +152,7 @@ const LoginScreen = () => {
         </Modal.Header>
         <Modal.Body>
           <p>
-            Account <strong>{googleUser?.email}</strong> does not exist.
+            Please enter a password to create your account <strong>{googleUser?.email}</strong>.
           </p>
           <Form.Control
             type="password"

@@ -199,9 +199,7 @@ const HomeScreen = () => {
 
         <Modal.Body>
           <p>
-            Account <strong>{googleUser?.email}</strong> does not exist.
-            <br />
-            Please enter a password to create your account.
+            Please enter a password to create your account <strong>{googleUser?.email}</strong>.
           </p>
 
           <Form.Control

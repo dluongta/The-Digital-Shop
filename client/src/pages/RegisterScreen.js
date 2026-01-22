@@ -153,6 +153,9 @@ const RegisterScreen = () => {
           <Modal.Title>Create account</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <p>
+            Please enter a password to create your account <strong>{googleUser?.email}</strong>.
+          </p>
           <Form.Control
             type="password"
             placeholder="Set password"
