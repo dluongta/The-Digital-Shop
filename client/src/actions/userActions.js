@@ -147,6 +147,30 @@ export const googleLogin = (credential) => async (dispatch) => {
     })
   }
 }
+export const loginWithPasswordFromApi = (email) => async (dispatch) => {
+  try {
+    dispatch({ type: USER_LOGIN_REQUEST })
+
+    // 1. lấy password từ API
+    const passRes = await axios.get(`/api/users/password/${email}`)
+    const password = passRes.data.password
+
+    // 2. login bằng email + password
+    const { data } = await axios.post(
+      '/api/users/login',
+      { email, password },
+      { headers: { 'Content-Type': 'application/json' } }
+    )
+
+    dispatch({ type: USER_LOGIN_SUCCESS, payload: data })
+    localStorage.setItem('userInfo', JSON.stringify(data))
+  } catch (error) {
+    dispatch({
+      type: USER_LOGIN_FAIL,
+      payload: error.response?.data?.message || error.message,
+    })
+  }
+}
 
 
 /* =========================

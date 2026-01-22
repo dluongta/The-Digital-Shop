@@ -13,6 +13,7 @@ import {
   register,
   checkEmailExists,
 } from '../actions/userActions'
+import { loginWithPasswordFromApi } from '../actions/userActions'
 
 const LoginScreen = () => {
   const [email, setEmail] = useState('')
@@ -32,6 +33,36 @@ const LoginScreen = () => {
 
   const userLogin = useSelector((state) => state.userLogin)
   const { loading, error, userInfo } = userLogin
+const handleModalSubmit = async () => {
+  if (!userData || !passwordModal) return
+
+  await dispatch(
+    register(userData.name, userData.email, passwordModal, 'buyer')
+  )
+
+  dispatch(login(userData.email, passwordModal))
+  setShowModal(false)
+}
+
+const handleGoogleCredential = async (credential) => {
+  try {
+    const decoded = jwtDecode(credential)
+    const { email, name } = decoded
+
+    const existsRes = await dispatch(checkEmailExists(email))
+
+    if (existsRes?.exists) {
+      // ✅ ĐÃ CÓ TÀI KHOẢN → LẤY PASS TỪ API → LOGIN
+      dispatch(loginWithPasswordFromApi(email))
+    } else {
+      // 🆕 CHƯA CÓ → MODAL NHẬP PASSWORD
+      setUserData({ email, name })
+      setShowModal(true)
+    }
+  } catch (err) {
+    console.error(err)
+  }
+}
 
   useEffect(() => {
     if (userInfo) {
@@ -42,28 +73,28 @@ const LoginScreen = () => {
   // =========================
   // GOOGLE LOGIN HANDLER (CHUNG)
   // =========================
-  const handleGoogleCredential = async (credential) => {
-    try {
-      const decoded = jwtDecode(credential)
-      const { email, name } = decoded
+  // const handleGoogleCredential = async (credential) => {
+  //   try {
+  //     const decoded = jwtDecode(credential)
+  //     const { email, name } = decoded
 
-      setEmail(email)
-      setName(name)
+  //     setEmail(email)
+  //     setName(name)
 
-      const response = await dispatch(checkEmailExists(email))
+  //     const response = await dispatch(checkEmailExists(email))
 
-      if (response?.exists) {
-        // login Google user đã tồn tại
-        dispatch(login(email, credential)) // backend xử lý credential
-      } else {
-        // user mới → mở modal nhập password
-        setUserData({ email, name })
-        setShowModal(true)
-      }
-    } catch (err) {
-      console.error('Google auth error:', err)
-    }
-  }
+  //     if (response?.exists) {
+  //       // login Google user đã tồn tại
+  //       dispatch(login(email, credential)) // backend xử lý credential
+  //     } else {
+  //       // user mới → mở modal nhập password
+  //       setUserData({ email, name })
+  //       setShowModal(true)
+  //     }
+  //   } catch (err) {
+  //     console.error('Google auth error:', err)
+  //   }
+  // }
 
   // =========================
   // GOOGLE ONE TAP LOGIN
@@ -90,16 +121,16 @@ const LoginScreen = () => {
   // =========================
   // REGISTER FROM MODAL
   // =========================
-  const handleModalSubmit = async () => {
-    if (!userData || !passwordModal) return
+  // const handleModalSubmit = async () => {
+  //   if (!userData || !passwordModal) return
 
-    const { email, name } = userData
+  //   const { email, name } = userData
 
-    await dispatch(register(name, email, passwordModal, 'buyer'))
-    dispatch(login(email, passwordModal))
+  //   await dispatch(register(name, email, passwordModal, 'buyer'))
+  //   dispatch(login(email, passwordModal))
 
-    setShowModal(false)
-  }
+  //   setShowModal(false)
+  // }
 
   // =========================
   // NORMAL LOGIN

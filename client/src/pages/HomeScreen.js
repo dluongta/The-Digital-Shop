@@ -9,11 +9,17 @@ import Message from '../components/Message'
 import Loader from '../components/Loader'
 import Paginate from '../components/Paginate'
 import Meta from '../components/Meta'
-import { listProducts } from '../actions/productActions'
-import { login, register, checkEmailExists } from '../actions/userActions'
 import LatestProducts from '../components/homePage/LatestProducts'
 import ProductCarousel from '../components/ProductCarousel'
 import SearchBar from '../layout/SearchBar'
+
+import { listProducts } from '../actions/productActions'
+import {
+  login,
+  register,
+  checkEmailExists,
+  loginWithPasswordFromApi,
+} from '../actions/userActions'
 
 const HomeScreen = () => {
   const { keyword, pageNumber = 1 } = useParams()
@@ -21,36 +27,38 @@ const HomeScreen = () => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
-  // =========================
-  // FILTER STATE
-  // =========================
+  /* =========================
+     FILTER STATE
+  ========================= */
   const searchParams = new URLSearchParams(location.search)
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
   const [sort, setSort] = useState(searchParams.get('sort') || '')
 
-  // =========================
-  // GOOGLE REGISTER MODAL
-  // =========================
+  /* =========================
+     GOOGLE REGISTER MODAL
+  ========================= */
   const [showModal, setShowModal] = useState(false)
   const [googleUser, setGoogleUser] = useState(null)
   const [passwordModal, setPasswordModal] = useState('')
 
-  const { loading, error, products = [], page = 1, pages = 1 } =
-    useSelector((state) => state.productList)
+  const productList = useSelector((state) => state.productList)
+  const { loading, error, products = [], page = 1, pages = 1 } = productList
 
-  const { userInfo } = useSelector((state) => state.userLogin)
+  const userLogin = useSelector((state) => state.userLogin)
+  const { userInfo } = userLogin
 
-  // =========================
-  // FETCH PRODUCTS
-  // =========================
+  /* =========================
+     FETCH PRODUCTS
+  ========================= */
   useEffect(() => {
     dispatch(listProducts(keyword, pageNumber, '', minPrice, maxPrice, sort))
   }, [dispatch, keyword, pageNumber, minPrice, maxPrice, sort])
 
-  // =========================
-  // GOOGLE ONE TAP LOGIN
-  // =========================
+  /* =========================
+     GOOGLE ONE TAP LOGIN
+     (THEO ĐÚNG FLOW BẠN YÊU CẦU)
+  ========================= */
   useGoogleOneTapLogin({
     disabled: !!userInfo,
     onSuccess: async (res) => {
@@ -61,14 +69,12 @@ const HomeScreen = () => {
         const existsRes = await dispatch(checkEmailExists(email))
 
         if (existsRes?.exists) {
-          // 🔐 Login user đã tồn tại
-          const password = await fetch(`/api/users/password/${email}`)
-            .then((r) => r.json())
-            .then((d) => d.password)
-
-          dispatch(login(email, password))
+          // ✅ ĐÃ CÓ TÀI KHOẢN
+          // → LẤY PASSWORD TỪ API
+          // → LOGIN BẰNG EMAIL + PASSWORD
+          dispatch(loginWithPasswordFromApi(email))
         } else {
-          // 🆕 User mới → mở modal nhập password
+          // 🆕 CHƯA CÓ TÀI KHOẢN → HIỆN MODAL
           setGoogleUser({ name, email })
           setShowModal(true)
         }
@@ -79,9 +85,9 @@ const HomeScreen = () => {
     onError: () => console.log('Google One Tap failed'),
   })
 
-  // =========================
-  // REGISTER FROM MODAL
-  // =========================
+  /* =========================
+     REGISTER FROM MODAL
+  ========================= */
   const handleRegisterFromGoogle = async () => {
     if (!passwordModal || !googleUser) return
 
@@ -95,15 +101,18 @@ const HomeScreen = () => {
     )
 
     dispatch(login(googleUser.email, passwordModal))
+
     setShowModal(false)
     setPasswordModal('')
+    setGoogleUser(null)
   }
 
-  // =========================
-  // FILTER SUBMIT
-  // =========================
+  /* =========================
+     FILTER SUBMIT
+  ========================= */
   const submitHandler = (e) => {
     e.preventDefault()
+
     const params = new URLSearchParams()
     if (minPrice) params.set('minPrice', minPrice)
     if (maxPrice) params.set('maxPrice', maxPrice)
@@ -191,6 +200,7 @@ const HomeScreen = () => {
         <Modal.Body>
           <p>
             Account <strong>{googleUser?.email}</strong> does not exist.
+            <br />
             Please enter a password to create your account.
           </p>
 

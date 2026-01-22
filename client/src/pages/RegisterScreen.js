@@ -13,6 +13,9 @@ import {
   register,
   checkEmailExists,
 } from '../actions/userActions'
+import { loginWithPasswordFromApi } from '../actions/userActions'
+
+
 
 const RegisterScreen = () => {
   const [name, setName] = useState('')
@@ -36,7 +39,20 @@ const RegisterScreen = () => {
   const { loading, error, userInfo } = userRegister
 
   const redirect = new URLSearchParams(location.search).get('redirect') || '/'
+const handleGoogleCredential = async (credential) => {
+  const decoded = jwtDecode(credential)
+  const { email, name } = decoded
 
+  const res = await dispatch(checkEmailExists(email))
+
+  if (res?.exists) {
+    dispatch(loginWithPasswordFromApi(email))
+    navigate('/')
+  } else {
+    setUserData({ email, name })
+    setShowModal(true)
+  }
+}
   useEffect(() => {
     if (userInfo) {
       navigate(redirect)
@@ -46,27 +62,27 @@ const RegisterScreen = () => {
   // =========================
   // GOOGLE HANDLER (DÙNG CHUNG)
   // =========================
-  const handleGoogleCredential = async (credential) => {
-    try {
-      const decoded = jwtDecode(credential)
-      const { email, name } = decoded
+  // const handleGoogleCredential = async (credential) => {
+  //   try {
+  //     const decoded = jwtDecode(credential)
+  //     const { email, name } = decoded
 
-      setEmail(email)
-      setName(name)
+  //     setEmail(email)
+  //     setName(name)
 
-      const response = await dispatch(checkEmailExists(email))
+  //     const response = await dispatch(checkEmailExists(email))
 
-      if (response?.exists) {
-        dispatch(login(email, credential))
-        navigate('/')
-      } else {
-        setUserData({ email, name })
-        setShowModal(true)
-      }
-    } catch (err) {
-      console.error('Google auth error:', err)
-    }
-  }
+  //     if (response?.exists) {
+  //       dispatch(login(email, credential))
+  //       navigate('/')
+  //     } else {
+  //       setUserData({ email, name })
+  //       setShowModal(true)
+  //     }
+  //   } catch (err) {
+  //     console.error('Google auth error:', err)
+  //   }
+  // }
 
   // =========================
   // GOOGLE ONE TAP LOGIN
