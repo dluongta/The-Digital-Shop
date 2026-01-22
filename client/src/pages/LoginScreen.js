@@ -162,7 +162,10 @@ const LoginScreen = () => {
           />
         </Modal.Body>
         <Modal.Footer>
-          <Button onClick={handleModalSubmit}>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleModalSubmit}>
             Register & Login
           </Button>
         </Modal.Footer>
