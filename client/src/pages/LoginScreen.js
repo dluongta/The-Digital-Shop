@@ -15,10 +15,13 @@ import {
   loginWithPasswordFromApi,
 } from '../actions/userActions'
 
-const LoginScreen = () => {
+const RegisterScreen = () => {
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [role, setRole] = useState('buyer')
+  const [roleModal, setRoleModal] = useState('buyer')
   const [showModal, setShowModal] = useState(false)
   const [passwordModal, setPasswordModal] = useState('')
   const [googleUser, setGoogleUser] = useState(null)
@@ -27,55 +30,43 @@ const LoginScreen = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const redirect = location.search
-    ? location.search.split('=')[1]
-    : '/'
+  const redirect = new URLSearchParams(location.search).get('redirect') || '/'
 
-  const userLogin = useSelector((state) => state.userLogin)
-  const { loading, error, userInfo } = userLogin
+  const userRegister = useSelector((state) => state.userRegister)
+  const { loading, error, userInfo } = userRegister
 
   useEffect(() => {
     if (userInfo) navigate(redirect)
   }, [userInfo, navigate, redirect])
 
   /* =========================
-     GOOGLE HANDLER (CHUNG)
+     GOOGLE HANDLER
   ========================= */
   const handleGoogleCredential = async (credential) => {
-    try {
-      const decoded = jwtDecode(credential)
-      const { email, name } = decoded
+    const decoded = jwtDecode(credential)
+    const { email, name } = decoded
 
-      const existsRes = await dispatch(checkEmailExists(email))
+    const existsRes = await dispatch(checkEmailExists(email))
 
-      if (existsRes?.exists) {
-        dispatch(loginWithPasswordFromApi(email))
-      } else {
-        setGoogleUser({ email, name })
-        setShowModal(true)
-      }
-    } catch (err) {
-      console.error(err)
+    if (existsRes?.exists) {
+      dispatch(loginWithPasswordFromApi(email))
+    } else {
+      setGoogleUser({ email, name })
+      setShowModal(true)
     }
   }
 
-  /* =========================
-     GOOGLE ONE TAP
-  ========================= */
   useGoogleOneTapLogin({
     disabled: !!userInfo,
     onSuccess: (res) => handleGoogleCredential(res.credential),
   })
 
-  /* =========================
-     GOOGLE BUTTON
-  ========================= */
   const handleGoogleLoginSuccess = (res) => {
     if (res?.credential) handleGoogleCredential(res.credential)
   }
 
   /* =========================
-     REGISTER FROM MODAL
+     MODAL REGISTER
   ========================= */
   const handleModalSubmit = async () => {
     if (!googleUser || !passwordModal) return
@@ -85,26 +76,27 @@ const LoginScreen = () => {
         googleUser.name,
         googleUser.email,
         passwordModal,
-        'buyer'
+        roleModal
       )
     )
 
     dispatch(login(googleUser.email, passwordModal))
     setShowModal(false)
-    setPasswordModal('')
   }
 
   /* =========================
-     NORMAL LOGIN
+     NORMAL REGISTER
   ========================= */
   const submitHandler = (e) => {
     e.preventDefault()
-    dispatch(login(email, password))
+
+    if (password !== confirmPassword) return
+    dispatch(register(name, email, password, role))
   }
 
   return (
     <FormContainer>
-      <h1>Sign In</h1>
+      <h1>Register</h1>
 
       {error && <Message variant="danger">{error}</Message>}
       {loading && <Loader />}
@@ -117,37 +109,58 @@ const LoginScreen = () => {
       </div>
 
       <Form onSubmit={submitHandler}>
-        <Form.Group className="mb-3">
-          <Form.Label>Email</Form.Label>
+        <Form.Control
+          className="mb-2"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+
+        <Form.Control
+          className="mb-2"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <Form.Control
+          className="mb-2"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <Form.Control
+          className="mb-3"
+          type="password"
+          placeholder="Confirm Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
+        <Form.Group className="mb-2" controlId="role">
           <Form.Control
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+            as="select"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="buyer">Buyer (Người mua)</option>
+            <option value="seller">Seller (Người bán)</option>
+          </Form.Control>
         </Form.Group>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </Form.Group>
 
-        <Button type="submit">Login</Button>
+        <Button type="submit">Register</Button>
       </Form>
 
-<Row className="py-3">
-  <Col>
-    New Customer?{' '}
-    <Link to="/register" className="fw-bold text-primary text-decoration-none">
-      Register
-    </Link>
-  </Col>
-</Row>
+      <Row className="py-3">
+        <Col>
+          Already have account? <Link to="/login" className="fw-bold text-primary text-decoration-none">Login</Link>
+        </Col>
+      </Row>
 
       {/* GOOGLE REGISTER MODAL */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Create account</Modal.Title>
         </Modal.Header>
@@ -161,6 +174,16 @@ const LoginScreen = () => {
             value={passwordModal}
             onChange={(e) => setPasswordModal(e.target.value)}
           />
+          <Form.Group className="mb-3" controlId="roleModal">
+            <Form.Control
+              as="select"
+              value={roleModal}
+              onChange={(e) => setRoleModal(e.target.value)}
+            >
+              <option value="buyer">Buyer (Người mua)</option>
+              <option value="seller">Seller (Người bán)</option>
+            </Form.Control>
+          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
@@ -175,4 +198,4 @@ const LoginScreen = () => {
   )
 }
 
-export default LoginScreen
+export default RegisterScreen
