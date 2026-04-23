@@ -54,36 +54,32 @@ app.use('/api/notifications', notificationRoutes);
 // 1. API: Gửi email yêu cầu reset mật khẩu
 app.post("/api/forgot-password", asyncHandler(async (req, res) => {
   const { email } = req.body;
-  // Làm sạch email đầu vào
-  const cleanEmail = email.trim().toLowerCase();
+  if (!email) return res.status(400).json({ status: "Email là bắt buộc" });
 
+  const cleanEmail = email.trim().toLowerCase();
   const oldUser = await User.findOne({ email: cleanEmail });
+
   if (!oldUser) {
-    return res.status(404).json({ status: "Email này không tồn tại trong hệ thống." });
+    // Trả về 404 để frontend hiển thị đúng thông báo
+    return res.status(404).json({ status: "User Not Exists!!" });
   }
 
-  // Tạo secret dùng riêng cho user này (kết hợp với mật khẩu hiện tại)
   const secret = process.env.JWT_SECRET + oldUser.password;
-  const token = jwt.sign({ email: oldUser.email, id: oldUser._id }, secret, { expiresIn: "5m" });
-  
+  const token = jwt.sign({ email: oldUser.email, id: oldUser._id }, secret, { expiresIn: "10m" });
   const link = `https://the-digital-shop.onrender.com/api/reset-password/${oldUser._id}/${token}`;
 
+  // BẮT BUỘC dùng try-catch ở đây để bắt lỗi từ sendEmail
   try {
     await sendEmail({
       to: cleanEmail,
       subject: "Khôi phục mật khẩu - The Digital Shop",
-      html: `
-        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee">
-          <h2>Yêu cầu khôi phục mật khẩu</h2>
-          <p>Click vào nút bên dưới để đặt lại mật khẩu. Liên kết này có hiệu lực trong 5 phút.</p>
-          <a href="${link}" style="background: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Đặt lại mật khẩu</a>
-          <p style="margin-top: 20px; color: #666">Nếu bạn không yêu cầu thay đổi này, hãy bỏ qua email.</p>
-        </div>
-      `,
+      html: `<h3>Link reset: <a href="${link}">${link}</a></h3>`,
     });
-    res.json({ status: "Một email hướng dẫn đã được gửi đến bạn." });
+    res.json({ status: "Reset Link Sent" });
   } catch (error) {
-    res.status(500).json({ status: "Lỗi khi gửi mail. Vui lòng thử lại sau." });
+    // In lỗi ra Render Console để bạn xem được "thủ phạm" thật sự
+    console.error("LỖI GỬI MAIL CHI TIẾT:", error.message);
+    res.status(500).json({ status: "Lỗi hệ thống gửi mail", detail: error.message });
   }
 }));
 
