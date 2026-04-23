@@ -31,7 +31,8 @@ import Footer from './layout/Footer';
 
 import socket from './socket';
 import { addNotification } from './actions/notificationActions';
-
+import ForgotPassword from './layouts/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 // ================= HEADER =================
 const Header = () => {
   const location = useLocation();
@@ -89,9 +90,9 @@ const App = () => {
             <Route path="/search/:keyword" element={<HomeScreen />} />
             <Route path="/search/:keyword/page/:pageNumber" element={<HomeScreen />} />
             <Route path="/" element={<HomeScreen />} />
-            <Route
-  path="/admin/product/:id/edit"  element={<ProductEditScreen />}/>
-
+            <Route path="/admin/product/:id/edit"  element={<ProductEditScreen />}/>
+          <Route path='/forgot-password' element={<ForgotPassword />} />
+          <Route path='/reset-password/:id/:token' element={<ResetPassword />} />
             <Route path="/orders" element={<BuyOrdersScreen />} />
             <Route path="/seller/orders" element={<SellOrdersScreen />} />
             <Route path="/admin/productlist" element={<AdminProductList />} />

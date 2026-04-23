@@ -15,13 +15,10 @@ import {
   loginWithPasswordFromApi,
 } from '../actions/userActions'
 
-const RegisterScreen = () => {
-  const [name, setName] = useState('')
+const LoginScreen = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [role, setRole] = useState('buyer')
-  const [roleModal, setRoleModal] = useState('buyer')
+
   const [showModal, setShowModal] = useState(false)
   const [passwordModal, setPasswordModal] = useState('')
   const [googleUser, setGoogleUser] = useState(null)
@@ -30,43 +27,57 @@ const RegisterScreen = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const redirect = new URLSearchParams(location.search).get('redirect') || '/'
+  const redirect = location.search
+    ? location.search.split('=')[1]
+    : '/'
 
-  const userRegister = useSelector((state) => state.userRegister)
-  const { loading, error, userInfo } = userRegister
+  const userLogin = useSelector((state) => state.userLogin)
+  const { loading, error, userInfo } = userLogin
 
   useEffect(() => {
     if (userInfo) navigate(redirect)
   }, [userInfo, navigate, redirect])
 
   /* =========================
-     GOOGLE HANDLER
+     GOOGLE HANDLER (CHUNG)
   ========================= */
   const handleGoogleCredential = async (credential) => {
-    const decoded = jwtDecode(credential)
-    const { email, name } = decoded
+    try {
+      const decoded = jwtDecode(credential)
+      const { email, name } = decoded
 
-    const existsRes = await dispatch(checkEmailExists(email))
+      const existsRes = await dispatch(checkEmailExists(email))
 
-    if (existsRes?.exists) {
-      dispatch(loginWithPasswordFromApi(email))
-    } else {
-      setGoogleUser({ email, name })
-      setShowModal(true)
+      if (existsRes?.exists) {
+        // ✅ ĐÃ CÓ TÀI KHOẢN → LOGIN BẰNG PASS TỪ API
+        dispatch(loginWithPasswordFromApi(email))
+      } else {
+        // 🆕 CHƯA CÓ → MODAL NHẬP PASSWORD
+        setGoogleUser({ email, name })
+        setShowModal(true)
+      }
+    } catch (err) {
+      console.error(err)
     }
   }
 
+  /* =========================
+     GOOGLE ONE TAP
+  ========================= */
   useGoogleOneTapLogin({
     disabled: !!userInfo,
     onSuccess: (res) => handleGoogleCredential(res.credential),
   })
 
+  /* =========================
+     GOOGLE BUTTON
+  ========================= */
   const handleGoogleLoginSuccess = (res) => {
     if (res?.credential) handleGoogleCredential(res.credential)
   }
 
   /* =========================
-     MODAL REGISTER
+     REGISTER FROM MODAL
   ========================= */
   const handleModalSubmit = async () => {
     if (!googleUser || !passwordModal) return
@@ -76,27 +87,31 @@ const RegisterScreen = () => {
         googleUser.name,
         googleUser.email,
         passwordModal,
-        roleModal
+        'buyer'
       )
     )
 
     dispatch(login(googleUser.email, passwordModal))
     setShowModal(false)
+    setPasswordModal('')
   }
 
   /* =========================
-     NORMAL REGISTER
+     NORMAL LOGIN
   ========================= */
   const submitHandler = (e) => {
     e.preventDefault()
-
-    if (password !== confirmPassword) return
-    dispatch(register(name, email, password, role))
+    dispatch(login(email, password))
   }
-
+  const forgotPasswordHandler = (event) => {
+    event.preventDefault();
+    navigate("/forgot-password", {
+      state: { message: email },
+    });
+  };
   return (
     <FormContainer>
-      <h1>Register</h1>
+      <h1>Sign In</h1>
 
       {error && <Message variant="danger">{error}</Message>}
       {loading && <Loader />}
@@ -109,58 +124,44 @@ const RegisterScreen = () => {
       </div>
 
       <Form onSubmit={submitHandler}>
-        <Form.Control
-          className="mb-2"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-
-        <Form.Control
-          className="mb-2"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-
-        <Form.Control
-          className="mb-2"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <Form.Control
-          className="mb-3"
-          type="password"
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-        />
-        <Form.Group className="mb-2" controlId="role">
+        <Form.Group className="mb-3">
+          <Form.Label>Email</Form.Label>
           <Form.Control
-            as="select"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="buyer">Buyer (Người mua)</option>
-            <option value="seller">Seller (Người bán)</option>
-          </Form.Control>
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </Form.Group>
 
+        <Form.Group className="mb-3">
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </Form.Group>
 
-        <Button type="submit">Register</Button>
+        <Button type="submit">Login</Button>
       </Form>
 
       <Row className="py-3">
         <Col>
-          Already have account? <Link to="/login" className="fw-bold text-primary text-decoration-none">Login</Link>
+          New Customer? <Link to="/register" className="fw-bold text-primary text-decoration-none">Register</Link>
+        </Col>
+      </Row>
+<Row className="py-3">
+        <Col>
+          New Customer? <Link to="/register" className="fw-bold text-primary text-decoration-none">Register</Link>
+        </Col>
+      </Row>
+<Row className="py-3">
+        <Col>
+          Forgot password? <Link to="/forgot-password" className="fw-bold text-primary text-decoration-none" onClick={forgotPasswordHandler}>Reset Password</Link>
         </Col>
       </Row>
 
       {/* GOOGLE REGISTER MODAL */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Create account</Modal.Title>
         </Modal.Header>
@@ -174,16 +175,6 @@ const RegisterScreen = () => {
             value={passwordModal}
             onChange={(e) => setPasswordModal(e.target.value)}
           />
-          <Form.Group className="mb-3" controlId="roleModal">
-            <Form.Control
-              as="select"
-              value={roleModal}
-              onChange={(e) => setRoleModal(e.target.value)}
-            >
-              <option value="buyer">Buyer (Người mua)</option>
-              <option value="seller">Seller (Người bán)</option>
-            </Form.Control>
-          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
@@ -198,4 +189,4 @@ const RegisterScreen = () => {
   )
 }
 
-export default RegisterScreen
+export default LoginScreen

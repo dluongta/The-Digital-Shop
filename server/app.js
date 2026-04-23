@@ -23,6 +23,10 @@ import Product from './models/productModel.js';
 import User from './models/userModel.js';
 import Discount from './models/discountModel.js';
 import Order from './models/orderModel.js';
+
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import sendEmail from './utils/sendEmail.js'; // Đảm bảo file này tồn tại
 dotenv.config();
 connectDB();
 
@@ -45,7 +49,91 @@ app.use('/api/room', chatRoomRoutes);
 app.use('/api/message', chatMessageRoutes);
 app.use('/api/discounts', discountRoutes);
 app.use('/api/notifications', notificationRoutes);
+// ================= RESET PASSWORD SYSTEM =================
 
+// 1. API: Gửi email yêu cầu reset mật khẩu
+app.post("/api/forgot-password", asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  // Làm sạch email đầu vào
+  const cleanEmail = email.trim().toLowerCase();
+
+  const oldUser = await User.findOne({ email: cleanEmail });
+  if (!oldUser) {
+    return res.status(404).json({ status: "Email này không tồn tại trong hệ thống." });
+  }
+
+  // Tạo secret dùng riêng cho user này (kết hợp với mật khẩu hiện tại)
+  const secret = process.env.JWT_SECRET + oldUser.password;
+  const token = jwt.sign({ email: oldUser.email, id: oldUser._id }, secret, { expiresIn: "5m" });
+  
+  const link = `https://the-digital-shop.onrender.com/api/reset-password/${oldUser._id}/${token}`;
+
+  try {
+    await sendEmail({
+      to: cleanEmail,
+      subject: "Khôi phục mật khẩu - The Digital Shop",
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee">
+          <h2>Yêu cầu khôi phục mật khẩu</h2>
+          <p>Click vào nút bên dưới để đặt lại mật khẩu. Liên kết này có hiệu lực trong 5 phút.</p>
+          <a href="${link}" style="background: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Đặt lại mật khẩu</a>
+          <p style="margin-top: 20px; color: #666">Nếu bạn không yêu cầu thay đổi này, hãy bỏ qua email.</p>
+        </div>
+      `,
+    });
+    res.json({ status: "Một email hướng dẫn đã được gửi đến bạn." });
+  } catch (error) {
+    res.status(500).json({ status: "Lỗi khi gửi mail. Vui lòng thử lại sau." });
+  }
+}));
+
+// 2. API: Xác thực link từ Email và Redirect về Frontend
+app.get("/api/reset-password/:id/:token", asyncHandler(async (req, res) => {
+  const { id, token } = req.params;
+
+  const oldUser = await User.findOne({ _id: id });
+  if (!oldUser) {
+    return res.status(404).send("Người dùng không tồn tại.");
+  }
+
+  const secret = process.env.JWT_SECRET + oldUser.password;
+  try {
+    jwt.verify(token, secret);
+    // Điều hướng người dùng về trang đổi mật khẩu ở Frontend
+    res.redirect(`/reset-password/${id}/${token}`);
+  } catch (error) {
+    res.status(403).send("Liên kết đã hết hạn hoặc không hợp lệ.");
+  }
+}));
+
+// 3. API: Thực hiện cập nhật mật khẩu mới vào Database
+app.post("/api/reset-password/:id/:token", asyncHandler(async (req, res) => {
+  const { id, token } = req.params;
+  const { password } = req.body;
+
+  const oldUser = await User.findOne({ _id: id });
+  if (!oldUser) {
+    return res.status(404).json({ status: "Người dùng không tồn tại." });
+  }
+
+  const secret = process.env.JWT_SECRET + oldUser.password;
+  try {
+    jwt.verify(token, secret);
+    
+    // Mã hóa mật khẩu mới (Nếu bạn muốn lưu mật khẩu thô như yêu cầu trước, bỏ bước hash này)
+    const salt = await bcrypt.genSalt(10);
+    const encryptedPassword = await bcrypt.hash(password, salt);
+
+    await User.updateOne(
+      { _id: id },
+      { $set: { password: encryptedPassword } } // Dùng password nếu muốn lưu thô
+    );
+
+    res.json({ status: "Cập nhật mật khẩu thành công!" });
+  } catch (error) {
+    res.status(500).json({ status: "Đã có lỗi xảy ra hoặc link hết hạn." });
+  }
+}));
 // ================= CHATBOT =================
 // Khởi tạo NLP Manager
 const manager = new NlpManager({ languages: ['vi'], forceNER: true });
