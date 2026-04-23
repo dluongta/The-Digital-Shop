@@ -11,17 +11,19 @@ const ResetPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // State mới để quản lý việc đếm ngược
   const [isSuccess, setIsSuccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
-  // Logic xử lý đếm ngược khi thành công
+  // Xử lý đếm ngược khi isSuccess = true
   useEffect(() => {
     let timer;
     if (isSuccess && countdown > 0) {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
       }, 1000);
-    } else if (isSuccess && countdown === 0) {
+    } else if (countdown === 0) {
       navigate("/login");
     }
     return () => clearInterval(timer);
@@ -29,8 +31,7 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
-
+    
     if (password !== confirmPassword) {
       setMessage("Mật khẩu xác nhận không khớp.");
       return;
@@ -43,8 +44,9 @@ const ResetPassword = () => {
       });
 
       if (response.data.status === "Password Updated Succeeded") {
+        // Thay vì navigate ngay, ta kích hoạt trạng thái thành công
         setIsSuccess(true);
-        setMessage("Mật khẩu đã được cập nhật thành công!");
+        setMessage("Đổi mật khẩu thành công! Đang chuyển hướng sau vài giây...");
       } else {
         setMessage(response.data.status);
       }
@@ -57,42 +59,35 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-2xl border border-gray-100 transition-all">
+      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
         <div>
           <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
             Thiết lập mật khẩu mới
           </h2>
           <p className="mt-2 text-center text-sm text-gray-500">
             {isSuccess 
-              ? `Tự động quay lại trang đăng nhập sau ${countdown} giây...` 
+              ? `Tự động chuyển về trang đăng nhập sau ${countdown}s` 
               : "Vui lòng nhập mật khẩu mới bảo mật hơn để tiếp tục."}
           </p>
         </div>
 
         {message && (
-          <div className={isSuccess ? "" : "animate-shake"}>
-            <Message variant={isSuccess ? 'success' : 'danger'}>
-              <div className="flex items-center justify-between">
-                <span>{message}</span>
-                {isSuccess && (
-                  <span className="font-bold bg-white/20 px-2 py-1 rounded text-xs">
-                    {countdown}s
-                  </span>
-                )}
-              </div>
-            </Message>
+          <div className={isSuccess ? "" : "animate-pulse"}>
+             <Message variant={isSuccess || message.includes("thành công") ? 'success' : 'danger'}>
+                {message} {isSuccess && `(${countdown}s)`}
+             </Message>
           </div>
         )}
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới</label>
               <input
                 type="password"
                 required
-                disabled={isSuccess || loading}
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm disabled:bg-gray-100"
+                disabled={isSuccess} // Khóa input khi đã thành công
+                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -104,8 +99,8 @@ const ResetPassword = () => {
               <input
                 type="password"
                 required
-                disabled={isSuccess || loading}
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm disabled:bg-gray-100"
+                disabled={isSuccess} // Khóa input khi đã thành công
+                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -113,16 +108,16 @@ const ResetPassword = () => {
             </div>
           </div>
 
-          <div>
+          <div className="pt-2">
             <button
               type="submit"
               disabled={loading || isSuccess}
-              className={`group relative w-full flex justify-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white transition-all transform active:scale-95 ${
+              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white transition-all transform active:scale-95 ${
                 isSuccess 
-                  ? 'bg-green-500 shadow-none' 
+                  ? 'bg-green-500' 
                   : loading 
                     ? 'bg-blue-400 cursor-not-allowed' 
-                    : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-blue-500/30'
+                    : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
               }`}
             >
               {loading ? (
