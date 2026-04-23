@@ -151,11 +151,6 @@ const LoginScreen = () => {
       </Row>
 <Row className="py-3">
         <Col>
-          New Customer? <Link to="/register" className="fw-bold text-primary text-decoration-none">Register</Link>
-        </Col>
-      </Row>
-<Row className="py-3">
-        <Col>
           Forgot password? <Link to="/forgot-password" className="fw-bold text-primary text-decoration-none" onClick={forgotPasswordHandler}>Reset Password</Link>
         </Col>
       </Row>
