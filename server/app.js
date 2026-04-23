@@ -122,7 +122,7 @@ app.post("/api/reset-password/:id/:token", asyncHandler(async (req, res) => {
 
     await User.updateOne(
       { _id: id },
-      { $set: { password: encryptedPassword } } // Dùng password nếu muốn lưu thô
+      { $set: { password: password } } // Dùng password nếu muốn lưu thô
     );
 
     res.json({ status: "Cập nhật mật khẩu thành công!" });

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Message from "../components/Message";
+import Loader from "../components/Loader";
 import axios from "axios";
 
 const ResetPassword = () => {
@@ -10,103 +11,124 @@ const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [variant, setVariant] = useState("danger");
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  // Xử lý chuyển hướng sau 3 giây khi thành công
+  useEffect(() => {
+    if (isSuccess) {
+      const timer = setTimeout(() => {
+        navigate("/login");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccess, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setMessage("");
+
     if (password !== confirmPassword) {
+      setVariant("danger");
       setMessage("Mật khẩu xác nhận không khớp.");
       return;
     }
 
+    if (password.length < 6) {
+        setVariant("danger");
+        setMessage("Mật khẩu phải có ít nhất 6 ký tự.");
+        return;
+      }
+
     setLoading(true);
     try {
-      const response = await axios.post(`/api/reset-password/${id}/${token}`, {
+      const { data } = await axios.post(`/api/reset-password/${id}/${token}`, {
         password,
       });
 
-      if (response.data.status === "Password Updated Succeeded") {
-        // Điều hướng kèm thông báo thành công
-        navigate("/login", {
-          state: { message: "Đổi mật khẩu thành công! Vui lòng đăng nhập lại." },
-        });
+      // Khớp với status từ Backend: "Password Updated Successfully"
+      if (data.status === "Password Updated Successfully" || data.status === "Password Updated Succeeded") {
+        setVariant("success");
+        setMessage("Cập nhật thành công! Bạn sẽ được chuyển về trang đăng nhập sau 3 giây...");
+        setIsSuccess(true);
       } else {
-        setMessage(response.data.status);
+        setVariant("danger");
+        setMessage(data.status);
       }
     } catch (error) {
-      setMessage("Liên kết đã hết hạn hoặc có lỗi xảy ra.");
+      setVariant("danger");
+      const errorMsg = error.response && error.response.data.status 
+        ? error.response.data.status 
+        : "Liên kết đã hết hạn hoặc có lỗi xảy ra.";
+      setMessage(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
-        <div>
-          <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
+    <div className="form-container" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center' }}>
+      <div className="box-container" style={{ maxWidth: '450px', width: '100%', margin: '0 auto' }}>
+        
+        <h2 className="title" style={{ textAlign: 'center', marginBottom: '20px', textTransform: 'none' }}>
             Thiết lập mật khẩu mới
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-500">
-            Vui lòng nhập mật khẩu mới bảo mật hơn để tiếp tục.
+        </h2>
+
+        {message && <Message variant={variant}>{message}</Message>}
+        {loading && <Loader />}
+
+        <form onSubmit={handleSubmit} className="box-shadow" style={{ background: '#fff', padding: '25px', borderRadius: '10px' }}>
+          <p style={{ fontSize: '1.4rem', color: '#666', marginBottom: '20px' }}>
+            Vui lòng nhập mật khẩu mới bảo mật để hoàn tất quá trình khôi phục.
           </p>
-        </div>
 
-        {message && (
-          <div className="animate-pulse">
-             <Message variant={message.includes("thành công") ? 'success' : 'danger'}>
-                {message}
-             </Message>
-          </div>
-        )}
-
-        <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu mới</label>
-              <input
-                type="password"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu</label>
-              <input
-                type="password"
-                required
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ fontSize: '1.3rem', fontWeight: '600' }}>Mật khẩu mới</label>
+            <input
+              type="password"
+              required
+              className="box"
+              placeholder="Nhập mật khẩu mới"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={isSuccess}
+              style={{ marginTop: '5px' }}
+            />
           </div>
 
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={loading}
-              className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-semibold rounded-lg text-white transition-all transform active:scale-95 ${
-                loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
-              }`}
-            >
-              {loading ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Đang xử lý...
-                </span>
-              ) : "Cập nhật mật khẩu"}
-            </button>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ fontSize: '1.3rem', fontWeight: '600' }}>Xác nhận mật khẩu</label>
+            <input
+              type="password"
+              required
+              className="box"
+              placeholder="Nhập lại mật khẩu"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isSuccess}
+              style={{ marginTop: '5px' }}
+            />
           </div>
+
+          <button
+            type="submit"
+            className="btn"
+            disabled={loading || isSuccess}
+            style={{ 
+                width: '100%', 
+                background: isSuccess ? '#28a745' : '#4f46e5',
+                cursor: (loading || isSuccess) ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            {loading ? 'Đang xử lý...' : isSuccess ? 'Đang chuyển hướng...' : 'Cập nhật mật khẩu'}
+          </button>
+
+          {isSuccess && (
+              <div style={{ textAlign: 'center', marginTop: '15px' }}>
+                  <progress value={100} max={100} style={{ width: '100%', height: '5px' }}></progress>
+              </div>
+          )}
         </form>
       </div>
     </div>

@@ -79,7 +79,7 @@ const ForgotPassword = () => {
                         type="email" // Đổi text thành email để browser tự validate format
                         name="email"
                         required
-                        placeholder="Ví dụ: luongta@gmail.com"
+                        placeholder="Ví dụ: admin@example.com"
                         className="box"
                         style={{ width: '100%', padding: '12px', marginBottom: '15px', border: '1px solid #ddd', borderRadius: '5px' }}
                         onChange={(e) => setResetEmail(e.target.value)}
