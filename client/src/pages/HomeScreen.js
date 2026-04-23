@@ -205,8 +205,7 @@ const HomeScreen = () => {
             value={passwordModal}
             onChange={(e) => setPasswordModal(e.target.value)}
           />
-        </Modal.Body>
-        <Form.Group className="mt-3">
+          <Form.Group className="mt-3">
           <Form.Control
             as="select"
             value={role}
@@ -216,6 +215,8 @@ const HomeScreen = () => {
             <option value="seller">Seller (Người bán)</option>
           </Form.Control>
         </Form.Group>
+        </Modal.Body>
+        
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Cancel

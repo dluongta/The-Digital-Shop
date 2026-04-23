@@ -22,7 +22,7 @@ const LoginScreen = () => {
   const [showModal, setShowModal] = useState(false)
   const [passwordModal, setPasswordModal] = useState('')
   const [googleUser, setGoogleUser] = useState(null)
-
+  const [role, setRole] = useState('buyer')
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const location = useLocation()
@@ -49,10 +49,8 @@ const LoginScreen = () => {
       const existsRes = await dispatch(checkEmailExists(email))
 
       if (existsRes?.exists) {
-        // ✅ ĐÃ CÓ TÀI KHOẢN → LOGIN BẰNG PASS TỪ API
         dispatch(loginWithPasswordFromApi(email))
       } else {
-        // 🆕 CHƯA CÓ → MODAL NHẬP PASSWORD
         setGoogleUser({ email, name })
         setShowModal(true)
       }
@@ -87,7 +85,7 @@ const LoginScreen = () => {
         googleUser.name,
         googleUser.email,
         passwordModal,
-        'buyer'
+        role
       )
     )
 
@@ -149,7 +147,7 @@ const LoginScreen = () => {
           New Customer? <Link to="/register" className="fw-bold text-primary text-decoration-none">Register</Link>
         </Col>
       </Row>
-<Row className="py-3">
+      <Row className="py-3">
         <Col>
           Forgot password? <Link to="/forgot-password" className="fw-bold text-primary text-decoration-none" onClick={forgotPasswordHandler}>Reset Password</Link>
         </Col>
@@ -170,6 +168,16 @@ const LoginScreen = () => {
             value={passwordModal}
             onChange={(e) => setPasswordModal(e.target.value)}
           />
+          <Form.Group className="mt-3">
+            <Form.Control
+              as="select"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="buyer">Buyer (Người mua)</option>
+              <option value="seller">Seller (Người bán)</option>
+            </Form.Control>
+          </Form.Group>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
