@@ -90,7 +90,7 @@ const RegisterScreen = () => {
     e.preventDefault()
 
     if (password !== confirmPassword) return
-    dispatch(register(name, email, password, 'buyer'))
+    dispatch(register(name, email, password, role))
   }
 
   return (
