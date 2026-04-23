@@ -125,7 +125,7 @@ app.post("/api/reset-password/:id/:token", asyncHandler(async (req, res) => {
       { $set: { password: password } } // Dùng password nếu muốn lưu thô
     );
 
-    res.json({ status: "Cập nhật mật khẩu thành công!" });
+    res.json({ status: "Password Updated Succeeded" });
   } catch (error) {
     res.status(500).json({ status: "Đã có lỗi xảy ra hoặc link hết hạn." });
   }
