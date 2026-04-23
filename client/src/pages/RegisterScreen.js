@@ -138,7 +138,7 @@ const RegisterScreen = () => {
           onChange={(e) => setConfirmPassword(e.target.value)}
         />  
 <Form.Group className="mb-2" controlId="role">
-  <Form.Label>Role:</Form.Label>
+  {/* <Form.Label>Role:</Form.Label> */}
   <Form.Control
     as="select"
     value={role}
@@ -175,7 +175,7 @@ const RegisterScreen = () => {
             onChange={(e) => setPasswordModal(e.target.value)}
           />
           <Form.Group className="mb-3" controlId="roleModal">
-      <Form.Label>Role:</Form.Label>
+      {/* <Form.Label>Role:</Form.Label> */}
       <Form.Control
         as="select"
         value={role}

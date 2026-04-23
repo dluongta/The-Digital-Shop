@@ -26,7 +26,7 @@ const HomeScreen = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const dispatch = useDispatch()
-
+  const [role, setRole] = useState('buyer')
   /* =========================
      FILTER STATE
   ========================= */
@@ -57,7 +57,6 @@ const HomeScreen = () => {
 
   /* =========================
      GOOGLE ONE TAP LOGIN
-     (THEO ĐÚNG FLOW BẠN YÊU CẦU)
   ========================= */
   useGoogleOneTapLogin({
     disabled: !!userInfo,
@@ -69,12 +68,8 @@ const HomeScreen = () => {
         const existsRes = await dispatch(checkEmailExists(email))
 
         if (existsRes?.exists) {
-          // ✅ ĐÃ CÓ TÀI KHOẢN
-          // → LẤY PASSWORD TỪ API
-          // → LOGIN BẰNG EMAIL + PASSWORD
           dispatch(loginWithPasswordFromApi(email))
         } else {
-          // 🆕 CHƯA CÓ TÀI KHOẢN → HIỆN MODAL
           setGoogleUser({ name, email })
           setShowModal(true)
         }
@@ -96,7 +91,7 @@ const HomeScreen = () => {
         googleUser.name,
         googleUser.email,
         passwordModal,
-        'buyer'
+        role
       )
     )
 
@@ -211,7 +206,16 @@ const HomeScreen = () => {
             onChange={(e) => setPasswordModal(e.target.value)}
           />
         </Modal.Body>
-
+        <Form.Group className="mt-3">
+          <Form.Control
+            as="select"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+          >
+            <option value="buyer">Buyer (Người mua)</option>
+            <option value="seller">Seller (Người bán)</option>
+          </Form.Control>
+        </Form.Group>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Cancel
