@@ -32,13 +32,23 @@ const RegisterScreen = () => {
 
   const redirect = new URLSearchParams(location.search).get('redirect') || '/'
 
+  // const userRegister = useSelector((state) => state.userRegister)
+  // const { loading, error, userInfo } = userRegister
+
+  // useEffect(() => {
+  //   if (userInfo) navigate(redirect)
+  // }, [userInfo, navigate, redirect])
   const userRegister = useSelector((state) => state.userRegister)
-  const { loading, error, userInfo } = userRegister
+  const { loading, error } = userRegister 
+
+  const userLogin = useSelector((state) => state.userLogin)
+  const { userInfo } = userLogin 
 
   useEffect(() => {
-    if (userInfo) navigate(redirect)
+    if (userInfo) {
+      navigate(redirect)
+    }
   }, [userInfo, navigate, redirect])
-
   /* =========================
      GOOGLE HANDLER
   ========================= */
