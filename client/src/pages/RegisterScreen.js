@@ -13,6 +13,7 @@ import {
   register,
   checkEmailExists,
   loginWithPasswordFromApi,
+  googleLoginDirect,
 } from '../actions/userActions'
 
 const RegisterScreen = () => {
@@ -48,7 +49,7 @@ const RegisterScreen = () => {
     const existsRes = await dispatch(checkEmailExists(email))
 
     if (existsRes?.exists) {
-      dispatch(loginWithPasswordFromApi(email))
+      dispatch(googleLoginDirect(email))
     } else {
       setGoogleUser({ email, name })
       setShowModal(true)

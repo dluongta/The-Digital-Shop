@@ -19,6 +19,7 @@ import {
   register,
   checkEmailExists,
   loginWithPasswordFromApi,
+  googleLoginDirect,
 } from '../actions/userActions'
 
 const HomeScreen = () => {
@@ -58,7 +59,28 @@ const HomeScreen = () => {
   /* =========================
      GOOGLE ONE TAP LOGIN
   ========================= */
-  useGoogleOneTapLogin({
+  // useGoogleOneTapLogin({
+  //   disabled: !!userInfo,
+  //   onSuccess: async (res) => {
+  //     try {
+  //       const decoded = jwtDecode(res.credential)
+  //       const { email, name } = decoded
+
+  //       const existsRes = await dispatch(checkEmailExists(email))
+
+  //       if (existsRes?.exists) {
+  //         dispatch(loginWithPasswordFromApi(email))
+  //       } else {
+  //         setGoogleUser({ name, email })
+  //         setShowModal(true)
+  //       }
+  //     } catch (err) {
+  //       console.error('Google One Tap error:', err)
+  //     }
+  //   },
+  //   onError: () => console.log('Google One Tap failed'),
+  // })
+useGoogleOneTapLogin({
     disabled: !!userInfo,
     onSuccess: async (res) => {
       try {
@@ -68,8 +90,10 @@ const HomeScreen = () => {
         const existsRes = await dispatch(checkEmailExists(email))
 
         if (existsRes?.exists) {
-          dispatch(loginWithPasswordFromApi(email))
+          // Bỏ qua check pass, đăng nhập thẳng vào hệ thống
+          dispatch(googleLoginDirect(email)) 
         } else {
+          // Nếu email chưa tồn tại, hiện modal yêu cầu nhập mật khẩu tạo tài khoản
           setGoogleUser({ name, email })
           setShowModal(true)
         }
@@ -79,7 +103,6 @@ const HomeScreen = () => {
     },
     onError: () => console.log('Google One Tap failed'),
   })
-
   /* =========================
      REGISTER FROM MODAL
   ========================= */

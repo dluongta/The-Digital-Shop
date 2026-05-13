@@ -253,6 +253,30 @@ const getUserPassword = asyncHandler(async (req, res) => {
 });
 
 
+// @desc    Auth user via Google (Bypass password)
+// @route   POST /api/users/google-login
+// @access  Public
+const googleLoginBypass = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  
+  // Không cần check password, nếu có user thì đăng nhập luôn
+  if (user) {
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      role: user.role,
+      paypalClientId: user.paypalClientId,
+      token: generateToken(user._id),
+    });
+  } else {
+    res.status(404);
+    throw new Error('User not found');
+  }
+});
 
 export {
   authUser,
@@ -264,5 +288,6 @@ export {
   getUserById,
   deleteUser,
   getUsers,
-  getUserPassword
+  getUserPassword,
+  googleLoginBypass,
 };
