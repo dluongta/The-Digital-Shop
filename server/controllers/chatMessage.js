@@ -19,31 +19,29 @@ export const createMessage = async (req, res) => {
   const { chatRoomId, sender, message } = req.body; 
 
   try {
-    // 1. Lưu tin nhắn mới
-      const newMessage = new ChatMessage({
+    // 1. Khởi tạo và Lưu tin nhắn mới (Đã sửa lỗi biến savedMessage)
+    const newMessage = new ChatMessage({
       chatRoomId,
       sender,
       message,
       isRead: false,
     });
+    
+    // Lưu và gán luôn vào biến savedMessage
+    const savedMessage = await newMessage.save();
 
-    await newMessage.save();
-
-    // ✅ CẬP NHẬT LAST MESSAGE
+    // 2. CẬP NHẬT LAST MESSAGE
     await ChatRoom.findByIdAndUpdate(chatRoomId, {
       lastMessage: {
         sender,
         message,
         isRead: false,
-        createdAt: new Date(),
+        createdAt: savedMessage.createdAt,
       },
     });
-    // const savedMessage = await newMessage.save();
 
-    // 2. Tìm thông tin người gửi (sender) để lấy Email/Name
+    // 3. Tìm thông tin người gửi & Phòng chat
     const senderInfo = await User.findById(sender);
-
-    // 3. Tìm phòng chat
     const room = await ChatRoom.findById(chatRoomId);
     
     if (room && senderInfo) {
@@ -52,26 +50,37 @@ export const createMessage = async (req, res) => {
       );
 
       for (const receiverId of receivers) {
-        // 4. Tạo thông báo với nội dung chứa Email người gửi
+        // 4. Tạo thông báo
         const newNotification = new Notification({
           user: receiverId,
           title: "Tin nhắn mới",
-          // THAY ĐỔI TẠI ĐÂY: Sử dụng senderInfo.email hoặc senderInfo.name
           message: `Bạn có tin nhắn mới từ: ${senderInfo.email}`, 
           type: "new_message",
           link: "/chat", 
         });
         await newNotification.save();
 
-        // 5. Gửi Socket Realtime
+        // 5. Gửi Socket Realtime tới người nhận
         const receiverSocketId = global.onlineUsers.get(receiverId.toString());
         if (receiverSocketId) {
           global.io.to(receiverSocketId).emit("newNotification", newNotification);
+          
+
+          global.io.to(receiverSocketId).emit("getMessage", {
+            _id: savedMessage._id,
+            chatRoomId,
+            senderId: sender,
+            message,
+            createdAt: savedMessage.createdAt
+          });
         }
       }
     }
+    
+    // Trả về kết quả đúng để Frontend nhận được
     res.status(201).json(savedMessage);
   } catch (error) {
+    console.error("Lỗi createMessage:", error);
     res.status(409).json({ message: error.message });
   }
 };

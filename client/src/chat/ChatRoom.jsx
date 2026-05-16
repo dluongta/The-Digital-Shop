@@ -625,7 +625,12 @@ export default function ChatRoom({
         chatRoomId: currentChat._id, sender: currentUser._id, message,
       });
 
-      // 1. Gửi Socket cho người khác
+      if (!res || !res._id) {
+        console.error("Gửi tin nhắn thất bại từ API");
+        return; 
+      }
+
+      // 1. Gửi Socket cho những người ĐANG MỞ phòng chat này
       socket.emit("sendMessageInRoom", {
         _id: res._id, 
         chatRoomId: currentChat._id, 
@@ -634,13 +639,13 @@ export default function ChatRoom({
         createdAt: res.createdAt
       });
 
-      // 2. Cập nhật ngay vào khung chat của mình
+      // 2. Cập nhật ngay vào khung chat của chính mình
       setMessages((prev) => {
         if (prev.some((m) => m._id === res._id)) return prev;
         return [...prev, res];
       });
 
-      // 3. CẬP NHẬT NGAY LẬP TỨC CHO SIDEBAR BÊN TRÁI
+      // 3. Cập nhật ngay lập tức cho Sidebar bên trái của mình
       setChatRooms((prev) =>
         prev.map((room) =>
           room._id === currentChat._id
