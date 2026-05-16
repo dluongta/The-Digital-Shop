@@ -350,7 +350,6 @@ const io = new Server(server, {
 
 global.io = io;
 global.onlineUsers = new Map();
-
 const removeUserBySocketId = (socketId) => {
   for (let [userId, sId] of onlineUsers.entries()) {
     if (sId === socketId) {
@@ -362,45 +361,43 @@ const removeUserBySocketId = (socketId) => {
 
 io.on('connection', (socket) => {
   console.log('Socket connected:', socket.id);
-
   global.chatSocket = socket;
 
-  // socket.on("addUser", (userId) => {
-  //   onlineUsers.set(userId, socket.id);
-  //   socket.emit("getUsers", Array.from(onlineUsers));
-  // });
   socket.on("addUser", (userId) => {
-  if (!userId) return;
-
-  onlineUsers.set(userId.toString(), socket.id);
-
-  io.emit("getUsers", Array.from(onlineUsers.keys()));
-
-  console.log("ONLINE USERS:", Array.from(onlineUsers.keys()));
-});
-
+    if (!userId) return;
+    onlineUsers.set(userId.toString(), socket.id);
+    io.emit("getUsers", Array.from(onlineUsers.keys()));
+    console.log("ONLINE USERS:", Array.from(onlineUsers.keys()));
+  });
 
   // ===== JOIN ROOM =====
   socket.on('joinRoom', (roomId) => {
     if (roomId) socket.join(roomId);
   });
 
+  // ===== LEAVE ROOM (Thêm mới để giải phóng socket) =====
+  socket.on('leaveRoom', (roomId) => {
+    if (roomId) socket.leave(roomId);
+  });
+
   // ===== PRIVATE MESSAGE =====
-socket.on('sendMessage', ({ senderId, receiverId, chatRoomId, message }) => {
+  socket.on('sendMessage', ({ senderId, receiverId, chatRoomId, message }) => {
     const receiverSocketId = onlineUsers.get(receiverId?.toString());
     if (receiverSocketId) {
-        io.to(receiverSocketId).emit('getMessage', { 
-            senderId, 
-            message, 
-            chatRoomId 
-        });
+      io.to(receiverSocketId).emit('getMessage', { 
+        senderId, 
+        message, 
+        chatRoomId 
+      });
     }
-});
+  });
 
   // ===== ROOM MESSAGE =====
-  socket.on('sendMessageInRoom', ({ chatRoomId, senderId, message }) => {
+  // Đã SỬA: Nhận thêm biến `_id` từ client và phát lại để các máy đồng bộ ID với Database
+  socket.on('sendMessageInRoom', ({ _id, chatRoomId, senderId, message }) => {
     if (chatRoomId) {
       io.to(chatRoomId).emit('getMessage', {
+        _id,
         senderId,
         message,
         chatRoomId,
@@ -408,18 +405,26 @@ socket.on('sendMessage', ({ senderId, receiverId, chatRoomId, message }) => {
     }
   });
 
+  // ===== THU HỒI TIN NHẮN (THÊM MỚI) =====
+  socket.on('revokeMessageInRoom', ({ chatRoomId, messageId }) => {
+    if (chatRoomId) {
+      // .to() sẽ gửi cho mọi người trong room ngoại trừ người gửi (socket.emit)
+      socket.to(chatRoomId).emit('messageRevoked', {
+        chatRoomId,
+        messageId,
+      });
+    }
+  });
+
   // ===== NOTIFICATION REALTIME =====
   socket.on('sendNotification', ({ userId, notification }) => {
     if (!userId || !notification) return;
-
     const socketId = onlineUsers.get(userId.toString());
     if (socketId) {
       io.to(socketId).emit('newNotification', notification);
     }
   });
-socket.on("revokeMessageInRoom", ({ chatRoomId, messageId }) => {
-  socket.to(chatRoomId).emit("messageRevoked", { chatRoomId, messageId });
-});
+
   // ===== DISCONNECT =====
   socket.on('disconnect', () => {
     removeUserBySocketId(socket.id);
