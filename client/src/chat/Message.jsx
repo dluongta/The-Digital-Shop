@@ -95,18 +95,28 @@ export default function Message({ message, self, users = [], onRevoke }) {
     <li className={`flex ${isSelf ? "justify-end" : "justify-start"} mb-2`}>
       <div
         className={`max-w-xs px-4 py-2 rounded-lg text-sm shadow ${
-          isSelf ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-900"
-        } ${message.isDeleted ? "opacity-60 italic bg-gray-100 text-gray-500 border" : ""}`}
+          message.isDeleted
+            ? "bg-gray-200 text-black border border-gray-400 italic" // ✅ Nền xám, chữ đen, có viền cho tin nhắn thu hồi
+            : isSelf
+            ? "bg-blue-500 text-white"
+            : "bg-gray-200 text-gray-900"
+        }`}
       >
+        {/* HIỂN THỊ TÊN / EMAIL */}
         <p
           className={`text-xs font-semibold mb-1 ${
-            isSelf && !message.isDeleted ? "text-blue-100" : "text-gray-600"
+            message.isDeleted
+              ? "text-black" 
+              : isSelf
+              ? "text-blue-100"
+              : "text-gray-600"
           }`}
         >
           {senderUser?.email || senderUser?.name || "Former member"}
         </p>
 
-        <p className="break-words">
+        {/* NỘI DUNG TIN NHẮN */}
+        <p className={`break-words ${message.isDeleted ? "text-black font-medium" : ""}`}>
           {message.isDeleted ? "Tin nhắn đã bị thu hồi" : message.message}
         </p>
 
@@ -119,11 +129,15 @@ export default function Message({ message, self, users = [], onRevoke }) {
               Thu hồi
             </button>
           ) : (
-            <span></span> 
+            <span></span>
           )}
 
           {/* Thời gian */}
-          <span className="text-[10px] opacity-70 text-right whitespace-nowrap">
+          <span 
+            className={`text-[10px] text-right whitespace-nowrap ${
+              message.isDeleted ? "text-black font-medium opacity-100" : "opacity-70" // ✅ Thời gian màu đen, đậm hơn khi thu hồi
+            }`}
+          >
             {new Date(message.createdAt).toLocaleString("vi-VN", {
               day: "2-digit",
               month: "2-digit",

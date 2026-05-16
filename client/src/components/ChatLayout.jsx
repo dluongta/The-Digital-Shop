@@ -26,9 +26,11 @@ export default function ChatLayout() {
     if (!currentUser?._id) return;
     socket.current = initiateSocketConnection();
     socket.current.emit("addUser", currentUser._id);
+    
     socket.current.on("getUsers", (users) => {
       setOnlineUsersId(users.map((u) => u.toString()));
     });
+
     socket.current.on("getMessage", (data) => {
       setChatRooms((prev) =>
         prev.map((room) =>
@@ -38,6 +40,17 @@ export default function ChatLayout() {
         )
       );
     });
+
+    socket.current.on("messageRevoked", (data) => {
+      setChatRooms((prev) =>
+        prev.map((room) =>
+          room._id === data.chatRoomId && room.lastMessage
+            ? { ...room, lastMessage: { ...room.lastMessage, message: "🚫 Tin nhắn đã bị thu hồi" } }
+            : room
+        )
+      );
+    });
+
     return () => socket.current?.disconnect();
   }, [currentUser?._id]);
 
@@ -67,12 +80,11 @@ export default function ChatLayout() {
 
       <div className="flex-1 flex flex-col lg:flex-row w-full">
         <div className={`
-  ${currentChat ? 'hidden lg:flex' : 'flex'} 
-  w-full lg:w-1/3 flex-col border-r bg-white
-  h-[calc(100vh-0px)]
-`}>
+          ${currentChat ? 'hidden lg:flex' : 'flex'} 
+          w-full lg:w-1/3 flex-col border-r bg-white h-[calc(100vh-0px)]
+        `}>
 
-          {/* HEADER FIXED (KHÔNG sticky) */}
+          {/* HEADER FIXED */}
           <div className="p-3 border-b flex gap-2 bg-white z-10 shrink-0">
             <SearchUsers handleSearch={setSearchQuery} />
 

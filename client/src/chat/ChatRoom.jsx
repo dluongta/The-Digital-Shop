@@ -408,11 +408,19 @@ export default function ChatRoom({
     try {
       await revokeMessageApi(messageId, currentUser._id);
 
+      // Cập nhật khung chat bên phải
       setMessages((prev) =>
         prev.map((m) => (m._id === messageId ? { ...m, isDeleted: true } : m))
       );
 
-      // Emit qua Socket cho người khác
+      setChatRooms((prev) =>
+        prev.map((room) =>
+          room._id === currentChat._id && room.lastMessage
+            ? { ...room, lastMessage: { ...room.lastMessage, message: "🚫 Tin nhắn đã bị thu hồi" } }
+            : room
+        )
+      );
+
       socket.emit("revokeMessageInRoom", {
         chatRoomId: currentChat._id,
         messageId: messageId,
