@@ -22,8 +22,12 @@ export default function ChatLayout() {
   const { initiateSocketConnection, getAllUsers, getChatRooms } = useApi();
 
   // ================= SOCKET =================
+  // ================= SOCKET =================
   useEffect(() => {
     if (!currentUser?._id) return;
+    
+    // (Bắt buộc dùng setSocket nếu bạn đã đổi sang useState như hướng dẫn trước, 
+    // nếu bạn vẫn đang dùng useRef thì giữ nguyên socket.current nhé)
     socket.current = initiateSocketConnection();
     socket.current.emit("addUser", currentUser._id);
     
@@ -41,16 +45,7 @@ export default function ChatLayout() {
       );
     });
 
-    // socket.current.on("messageRevoked", (data) => {
-    //   setChatRooms((prev) =>
-    //     prev.map((room) =>
-    //       room._id === data.chatRoomId && room.lastMessage
-    //         ? { ...room, lastMessage: { ...room.lastMessage, message: "Tin nhắn đã bị thu hồi" } }
-    //         : room
-    //     )
-    //   );
-    // });
-socket.current.on("messageRevoked", (data) => {
+    socket.current.on("messageRevoked", (data) => {
       setChatRooms((prev) =>
         prev.map((room) =>
           room._id === data.chatRoomId
@@ -59,6 +54,16 @@ socket.current.on("messageRevoked", (data) => {
         )
       );
     });
+
+    // ✅ THÊM TAI NGHE: Lắng nghe khi được ai đó thêm vào nhóm mới
+    socket.current.on("newChatRoom", (newRoom) => {
+      setChatRooms((prev) => {
+        // Kiểm tra xem phòng đã có chưa để tránh trùng lặp
+        if (prev.some((room) => room._id === newRoom._id)) return prev;
+        return [newRoom, ...prev]; // Đẩy phòng mới lên đầu danh sách
+      });
+    });
+
     return () => socket.current?.disconnect();
   }, [currentUser?._id]);
 
