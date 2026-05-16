@@ -244,6 +244,232 @@
 //     </div>
 //   );
 // }
+// import { useState, useEffect, useRef, useMemo } from "react";
+// import { useApi } from "../services/ChatService";
+// import Message from "./Message";
+// import Contact from "./Contact";
+// import ChatForm from "./ChatForm";
+
+// export default function ChatRoom({
+//   currentChat, setCurrentChat, setChatRooms, currentUser, socket, users, onlineUsersId,
+// }) {
+//   const [messages, setMessages] = useState([]);
+//   const chatContainerRef = useRef(null);
+//   const firstLoadRef = useRef(true);
+
+//   const { getMessagesOfChatRoom, sendMessage, leaveGroupChat, revokeMessageApi } = useApi();
+
+//   // ================= FETCH MESSAGES =================
+//   useEffect(() => {
+//     if (!currentChat?._id) return;
+
+//     const fetchMessages = async () => {
+//       try {
+//         const res = await getMessagesOfChatRoom(currentChat._id);
+//         // Đảm bảo res luôn là mảng, tránh lỗi crash map()
+//         setMessages(Array.isArray(res) ? res : []);
+//         firstLoadRef.current = true;
+//       } catch (err) {
+//         console.error("Lỗi khi tải tin nhắn:", err);
+//       }
+//     };
+
+//     fetchMessages();
+//   }, [currentChat?._id]);
+
+//   // ================= AUTO SCROLL =================
+//   useEffect(() => {
+//     if (!chatContainerRef.current) return;
+//     chatContainerRef.current.scrollTo({
+//       top: chatContainerRef.current.scrollHeight,
+//       behavior: firstLoadRef.current ? "auto" : "smooth",
+//     });
+//     firstLoadRef.current = false;
+//   }, [messages]);
+
+//   // ================= HEADER CONTENT =================
+//   const getMemberInfo = (memberId) => {
+//     if (memberId === currentUser._id) return `You – ${currentUser.email}`;
+//     const user = users.find((u) => u._id === memberId);
+//     if (!user) return "Unknown User";
+//     const name = user.name && user.name.trim() !== "" ? user.name : "No Name";
+//     return `${name} – ${user.email}`;
+//   };
+
+//   const headerContent = useMemo(() => {
+//     if (!currentChat) return null;
+
+//     if (currentChat.isGroup) {
+//       return (
+//         <div className="flex flex-col w-full">
+//           <div className="flex justify-between items-start">
+//             <div className="truncate">
+//               <h3 className="font-semibold truncate">{currentChat.name}</h3>
+//               <p className="text-[10px] text-gray-500">{currentChat.members?.length || 0} members</p>
+//             </div>
+//             <button
+//               type="button"
+//               onClick={async () => {
+//                 const ok = window.confirm("Bạn có chắc muốn rời nhóm?");
+//                 if (!ok) return;
+//                 await leaveGroupChat(currentChat._id, currentUser._id);
+//                 setChatRooms((prev) => prev.filter((room) => room._id !== currentChat._id));
+//                 setCurrentChat(null);
+//               }}
+//               className="bg-red-500 text-white px-2 py-1 text-xs rounded"
+//             >
+//               Leave
+//             </button>
+//           </div>
+//           <div className="mt-2 flex flex-wrap gap-1">
+//             {currentChat.members.map((memberId) => (
+//               <span
+//                 key={memberId}
+//                 className={`text-[10px] px-2 py-1 rounded-full border ${
+//                   memberId === currentUser._id
+//                     ? "bg-blue-100 text-blue-600 border-blue-200"
+//                     : "bg-gray-100 text-gray-600 border-gray-200"
+//                 }`}
+//               >
+//                 {getMemberInfo(memberId)}
+//               </span>
+//             ))}
+//           </div>
+//         </div>
+//       );
+//     }
+
+//     return (
+//       <Contact
+//         chatRoom={currentChat}
+//         currentUser={currentUser}
+//         onlineUsersId={onlineUsersId}
+//         users={users}
+//       />
+//     );
+//   }, [currentChat, users, onlineUsersId]);
+
+//   // ================= SOCKET JOIN/LEAVE & RECEIVE =================
+//   useEffect(() => {
+//     if (!socket || !currentChat?._id) return;
+
+//     socket.emit("joinRoom", currentChat._id);
+
+//     // Xử lý nhận tin nhắn mới
+//     const handleMessage = (data) => {
+//       if (data.chatRoomId !== currentChat?._id) return;
+//       setMessages((prev) => [
+//         ...prev,
+//         { _id: data._id || Date.now(), sender: data.senderId, message: data.message, isDeleted: false },
+//       ]);
+//     };
+
+//     // Xử lý sự kiện tin nhắn bị thu hồi từ người khác
+//     const handleRevoke = (data) => {
+//       if (data.chatRoomId !== currentChat?._id) return;
+//       setMessages((prev) =>
+//         prev.map((m) => (m._id === data.messageId ? { ...m, isDeleted: true } : m))
+//       );
+//     };
+
+//     socket.on("getMessage", handleMessage);
+//     socket.on("messageRevoked", handleRevoke);
+
+//     return () => {
+//       socket.emit("leaveRoom", currentChat._id);
+//       socket.off("getMessage", handleMessage);
+//       socket.off("messageRevoked", handleRevoke);
+//     };
+//   }, [socket, currentChat]);
+
+//   // ================= SEND MESSAGE =================
+//   const handleFormSubmit = async (message) => {
+//     if (!message.trim()) return;
+//     try {
+//       const res = await sendMessage({
+//         chatRoomId: currentChat._id, sender: currentUser._id, message,
+//       });
+
+//       socket.emit("sendMessageInRoom", {
+//         _id: res._id, // Quan trọng: Gửi _id thật lên server
+//         chatRoomId: currentChat._id, 
+//         senderId: currentUser._id, 
+//         message,
+//       });
+
+//       setMessages((prev) => [...prev, res]);
+//     } catch (error) {
+//       console.error("Lỗi gửi tin nhắn:", error);
+//     }
+//   };
+
+//   // ================= REVOKE MESSAGE =================
+//   const handleRevokeMessage = async (messageId) => {
+//     try {
+//       await revokeMessageApi(messageId, currentUser._id);
+
+//       // Cập nhật khung chat bên phải
+//       setMessages((prev) =>
+//         prev.map((m) => (m._id === messageId ? { ...m, isDeleted: true } : m))
+//       );
+
+//       setChatRooms((prev) =>
+//         prev.map((room) =>
+//           room._id === currentChat._id && room.lastMessage
+//             ? { ...room, lastMessage: { ...room.lastMessage, message: "Tin nhắn đã bị thu hồi" } }
+//             : room
+//         )
+//       );
+
+//       socket.emit("revokeMessageInRoom", {
+//         chatRoomId: currentChat._id,
+//         messageId: messageId,
+//       });
+//     } catch (error) {
+//       console.error("Lỗi khi thu hồi tin nhắn", error);
+//       alert("Không thể thu hồi tin nhắn lúc này.");
+//     }
+//   };
+
+//   // ================= RENDER =================
+//   return (
+//     <div className="h-full flex flex-col w-full bg-white">
+//       {/* HEADER */}
+//       <div className="flex items-center p-3 border-b bg-white shrink-0 shadow-sm">
+//         <button
+//           onClick={() => setCurrentChat(null)}
+//           className="lg:hidden mr-3 p-1 hover:bg-gray-100 rounded-full"
+//         >
+//           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+//           </svg>
+//         </button>
+//         <div className="flex-1 min-w-0">{headerContent}</div>
+//       </div>
+
+//       {/* MESSAGES */}
+//       <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-3">
+//         {messages.map(
+//           (m) =>
+//             m?._id && (
+//               <Message
+//                 key={m._id}
+//                 message={m}
+//                 self={currentUser._id}
+//                 users={users}
+//                 onRevoke={handleRevokeMessage}
+//               />
+//             )
+//         )}
+//       </div>
+
+//       {/* INPUT */}
+//       <div className="p-3 border-t bg-white shrink-0">
+//         <ChatForm handleFormSubmit={handleFormSubmit} />
+//       </div>
+//     </div>
+//   );
+// }
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useApi } from "../services/ChatService";
 import Message from "./Message";
@@ -266,7 +492,6 @@ export default function ChatRoom({
     const fetchMessages = async () => {
       try {
         const res = await getMessagesOfChatRoom(currentChat._id);
-        // Đảm bảo res luôn là mảng, tránh lỗi crash map()
         setMessages(Array.isArray(res) ? res : []);
         firstLoadRef.current = true;
       } catch (err) {
@@ -355,16 +580,26 @@ export default function ChatRoom({
 
     socket.emit("joinRoom", currentChat._id);
 
-    // Xử lý nhận tin nhắn mới
     const handleMessage = (data) => {
       if (data.chatRoomId !== currentChat?._id) return;
-      setMessages((prev) => [
-        ...prev,
-        { _id: data._id || Date.now(), sender: data.senderId, message: data.message, isDeleted: false },
-      ]);
+      
+      setMessages((prev) => {
+        // BƯỚC QUAN TRỌNG: CHẶN LỖI TRÙNG ID (Nếu tin nhắn do chính mình gửi và đã có trong state thì bỏ qua)
+        if (prev.some((m) => m._id === data._id)) return prev;
+
+        return [
+          ...prev,
+          { 
+            _id: data._id || Date.now(), 
+            sender: data.senderId, 
+            message: data.message, 
+            isDeleted: false,
+            createdAt: data.createdAt || new Date() 
+          },
+        ];
+      });
     };
 
-    // Xử lý sự kiện tin nhắn bị thu hồi từ người khác
     const handleRevoke = (data) => {
       if (data.chatRoomId !== currentChat?._id) return;
       setMessages((prev) =>
@@ -390,14 +625,37 @@ export default function ChatRoom({
         chatRoomId: currentChat._id, sender: currentUser._id, message,
       });
 
+      // 1. Gửi Socket cho người khác
       socket.emit("sendMessageInRoom", {
-        _id: res._id, // Quan trọng: Gửi _id thật lên server
+        _id: res._id, 
         chatRoomId: currentChat._id, 
         senderId: currentUser._id, 
         message,
+        createdAt: res.createdAt
       });
 
-      setMessages((prev) => [...prev, res]);
+      // 2. Cập nhật ngay vào khung chat của mình
+      setMessages((prev) => {
+        if (prev.some((m) => m._id === res._id)) return prev;
+        return [...prev, res];
+      });
+
+      // 3. CẬP NHẬT NGAY LẬP TỨC CHO SIDEBAR BÊN TRÁI
+      setChatRooms((prev) =>
+        prev.map((room) =>
+          room._id === currentChat._id
+            ? {
+                ...room,
+                lastMessage: {
+                  sender: currentUser._id,
+                  message: res.message,
+                  isRead: false,
+                  createdAt: res.createdAt || new Date().toISOString(),
+                },
+              }
+            : room
+        )
+      );
     } catch (error) {
       console.error("Lỗi gửi tin nhắn:", error);
     }
@@ -408,15 +666,15 @@ export default function ChatRoom({
     try {
       await revokeMessageApi(messageId, currentUser._id);
 
-      // Cập nhật khung chat bên phải
       setMessages((prev) =>
         prev.map((m) => (m._id === messageId ? { ...m, isDeleted: true } : m))
       );
 
+      // Cập nhật lại sidebar ngay lập tức khi MÌNH thu hồi
       setChatRooms((prev) =>
         prev.map((room) =>
           room._id === currentChat._id && room.lastMessage
-            ? { ...room, lastMessage: { ...room.lastMessage, message: "Tin nhắn đã bị thu hồi" } }
+            ? { ...room, lastMessage: { ...room.lastMessage, message: "🚫 Tin nhắn đã bị thu hồi" } }
             : room
         )
       );
