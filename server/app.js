@@ -417,7 +417,9 @@ socket.on('sendMessage', ({ senderId, receiverId, chatRoomId, message }) => {
       io.to(socketId).emit('newNotification', notification);
     }
   });
-
+socket.on("revokeMessageInRoom", ({ chatRoomId, messageId }) => {
+  socket.to(chatRoomId).emit("messageRevoked", { chatRoomId, messageId });
+});
   // ===== DISCONNECT =====
   socket.on('disconnect', () => {
     removeUserBySocketId(socket.id);

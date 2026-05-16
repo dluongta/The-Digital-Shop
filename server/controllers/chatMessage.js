@@ -120,5 +120,27 @@ export const markMessagesAsRead = async (req, res) => {
   }
 };
 
+export const revokeMessage = async (req, res) => {
+  const { messageId } = req.params;
+  const { userId } = req.body;
 
+  try {
+    const message = await ChatMessage.findById(messageId);
+    
+    if (!message) {
+      return res.status(404).json({ message: "Không tìm thấy tin nhắn" });
+    }
+
+    if (message.sender.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Bạn không có quyền thu hồi tin nhắn này" });
+    }
+
+    message.isDeleted = true;
+    await message.save();
+
+    res.status(200).json(message);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 

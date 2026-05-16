@@ -134,7 +134,10 @@ const leaveGroupChat = async (roomId, userId) => {
   return res.data;
 };
 
-
+  const revokeMessageApi = async (messageId, userId) => {
+  const res = await axios.put(`/api/messages/${messageId}/revoke`, { userId });
+  return res.data;
+};
   return {
     initiateSocketConnection,
     getAllUsers,
@@ -147,6 +150,7 @@ const leaveGroupChat = async (roomId, userId) => {
     markAllMessagesAsRead,
     markMessagesAsRead,
     leaveGroupChat,
+    revokeMessageApi,
   };
 };
 
