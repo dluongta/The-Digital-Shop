@@ -506,7 +506,7 @@ export default function ChatRoom({
   useEffect(() => {
     if (!chatContainerRef.current) return;
     chatContainerRef.current.scrollTo({
-      top: chatContainerRef.current.scrollHeight,
+      top: 0,
       behavior: firstLoadRef.current ? "auto" : "smooth",
     });
     firstLoadRef.current = false;
@@ -588,7 +588,7 @@ export default function ChatRoom({
         if (prev.some((m) => m._id === data._id)) return prev;
 
         return [
-          ...prev,
+          
           { 
             _id: data._id || Date.now(), 
             sender: data.senderId, 
@@ -596,6 +596,7 @@ export default function ChatRoom({
             isDeleted: false,
             createdAt: data.createdAt || new Date() 
           },
+          ...prev,
         ];
       });
     };
@@ -642,7 +643,7 @@ export default function ChatRoom({
       // 2. Cập nhật ngay vào khung chat của chính mình
       setMessages((prev) => {
         if (prev.some((m) => m._id === res._id)) return prev;
-        return [...prev, res];
+        return [res, ...prev];
       });
 
       // 3. Cập nhật ngay lập tức cho Sidebar bên trái của mình
@@ -694,26 +695,41 @@ export default function ChatRoom({
   //   }
   // };
 // ================= REVOKE MESSAGE =================
+  // ================= REVOKE MESSAGE =================
   const handleRevokeMessage = async (messageId) => {
     try {
-      // Nhận dữ liệu từ Backend
-      const res = await revokeMessageApi(messageId, currentUser._id);
+      // 1. Gọi API thu hồi lên Server
+      await revokeMessageApi(messageId, currentUser._id);
 
-      // Cập nhật giao diện khung chat bên phải
-      setMessages((prev) =>
-        prev.map((m) => (m._id === messageId ? { ...m, isDeleted: true } : m))
-      );
-
-      // Cập nhật Sidebar bên trái bằng dữ liệu chuẩn của Server
-      if (res && res.newLastMessage) {
-        setChatRooms((prev) =>
-          prev.map((room) =>
-            room._id === currentChat._id
-              ? { ...room, lastMessage: res.newLastMessage } // ✅ Cập nhật đúng tin nhắn cuối cùng
-              : room
-          )
+      // 2. Cập nhật khung chat & Sidebar
+      setMessages((prev) => {
+        const updatedMessages = prev.map((m) =>
+          m._id === messageId ? { ...m, isDeleted: true } : m
         );
-      }
+
+        // ✅ Lấy tin nhắn MỚI NHẤT (Bây giờ nó nằm ở VỊ TRÍ ĐẦU TIÊN [0] do đã đảo ngược)
+        const latestMsg = updatedMessages[0];
+
+        if (latestMsg) {
+          setChatRooms((prevRooms) =>
+            prevRooms.map((room) =>
+              room._id === currentChat._id
+                ? {
+                    ...room,
+                    lastMessage: {
+                      ...room.lastMessage,
+                      message: latestMsg.isDeleted ? "Tin nhắn đã bị thu hồi" : latestMsg.message,
+                      sender: latestMsg.sender,
+                      createdAt: latestMsg.createdAt || new Date().toISOString(),
+                    },
+                  }
+                : room
+            )
+          );
+        }
+
+        return updatedMessages;
+      });
 
     } catch (error) {
       console.error("Lỗi khi thu hồi tin nhắn", error);

@@ -6,7 +6,8 @@ export const getMessages = async (req, res) => {
   try {
     const messages = await ChatMessage.find({
       chatRoomId: req.params.chatRoomId,
-    });
+    }).sort({ createdAt: -1 }); 
+
     res.status(200).json(messages);
   } catch (error) {
     res.status(409).json({
