@@ -146,15 +146,24 @@ export const NavBar = ({ socket }) => {
                       key={n._id}
                       onClick={() => handleNotificationClick(n)}
                       style={{
-                        backgroundColor: n.isRead ? '#fff' : '#e7f1ff',
+                        backgroundColor: n.isRead ? '#fff' : '#0368f5',
                         fontWeight: n.isRead ? 'normal' : 'bold',
+                        color: '#000',
                         whiteSpace: 'normal',
                         borderBottom: '1px solid #eee'
                       }}
                     >
                       <div className="d-flex justify-content-between">
                         <span>{n.title}</span>
-                        {!n.isRead && <Badge bg="primary" pill>New</Badge>}
+                        {!n.isRead && <Badge
+                          pill
+                          style={{
+                            backgroundColor: '#ff5608',
+                            color: '#000',
+                          }}
+                        >
+                          New
+                        </Badge>}
                       </div>
                       <small className="text-muted d-block">{n.message}</small>
                       <div className="text-end text-muted" style={{ fontSize: '0.7rem' }}>
