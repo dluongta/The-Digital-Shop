@@ -679,7 +679,7 @@ export default function ChatRoom({
       setChatRooms((prev) =>
         prev.map((room) =>
           room._id === currentChat._id && room.lastMessage
-            ? { ...room, lastMessage: { ...room.lastMessage, message: "🚫 Tin nhắn đã bị thu hồi" } }
+            ? { ...room, lastMessage: { ...room.lastMessage, message: "Tin nhắn đã bị thu hồi" } }
             : room
         )
       );

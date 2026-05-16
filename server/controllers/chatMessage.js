@@ -129,6 +129,48 @@ export const markMessagesAsRead = async (req, res) => {
   }
 };
 
+// export const revokeMessage = async (req, res) => {
+//   const { messageId } = req.params;
+//   const { userId } = req.body;
+
+//   try {
+//     const message = await ChatMessage.findById(messageId);
+    
+//     if (!message) {
+//       return res.status(404).json({ message: "Không tìm thấy tin nhắn" });
+//     }
+
+//     if (message.sender.toString() !== userId.toString()) {
+//       return res.status(403).json({ message: "Bạn không có quyền thu hồi tin nhắn này" });
+//     }
+
+//     message.isDeleted = true;
+//     await message.save();
+
+
+//     const latestMessage = await ChatMessage.findOne({ chatRoomId: message.chatRoomId })
+//       .sort({ createdAt: -1 });
+
+//     if (latestMessage) {
+//       const updatedMessageContent = latestMessage.isDeleted
+//         ? "Tin nhắn đã bị thu hồi"
+//         : latestMessage.message;
+
+//       await ChatRoom.findByIdAndUpdate(message.chatRoomId, {
+//         lastMessage: {
+//           sender: latestMessage.sender,
+//           message: updatedMessageContent,
+//           isRead: latestMessage.isRead,
+//           createdAt: latestMessage.createdAt,
+//         },
+//       });
+//     }
+
+//     res.status(200).json(message);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
 export const revokeMessage = async (req, res) => {
   const { messageId } = req.params;
   const { userId } = req.body;
@@ -146,7 +188,6 @@ export const revokeMessage = async (req, res) => {
 
     message.isDeleted = true;
     await message.save();
-
 
     const latestMessage = await ChatMessage.findOne({ chatRoomId: message.chatRoomId })
       .sort({ createdAt: -1 });
@@ -166,8 +207,27 @@ export const revokeMessage = async (req, res) => {
       });
     }
 
+    const room = await ChatRoom.findById(message.chatRoomId);
+    if (room) {
+      const receivers = room.members.filter(
+        (memberId) => memberId.toString() !== userId.toString()
+      );
+
+      for (const receiverId of receivers) {
+        const receiverSocketId = global.onlineUsers.get(receiverId.toString());
+        
+        if (receiverSocketId) {
+          global.io.to(receiverSocketId).emit("messageRevoked", {
+            chatRoomId: message.chatRoomId,
+            messageId: message._id,
+          });
+        }
+      }
+    }
+
     res.status(200).json(message);
   } catch (error) {
+    console.error("Lỗi revokeMessage:", error);
     res.status(500).json({ message: error.message });
   }
 };
