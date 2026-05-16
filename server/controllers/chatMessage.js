@@ -138,6 +138,25 @@ export const revokeMessage = async (req, res) => {
     message.isDeleted = true;
     await message.save();
 
+
+    const latestMessage = await ChatMessage.findOne({ chatRoomId: message.chatRoomId })
+      .sort({ createdAt: -1 });
+
+    if (latestMessage) {
+      const updatedMessageContent = latestMessage.isDeleted
+        ? "Tin nhắn đã bị thu hồi"
+        : latestMessage.message;
+
+      await ChatRoom.findByIdAndUpdate(message.chatRoomId, {
+        lastMessage: {
+          sender: latestMessage.sender,
+          message: updatedMessageContent,
+          isRead: latestMessage.isRead,
+          createdAt: latestMessage.createdAt,
+        },
+      });
+    }
+
     res.status(200).json(message);
   } catch (error) {
     res.status(500).json({ message: error.message });
