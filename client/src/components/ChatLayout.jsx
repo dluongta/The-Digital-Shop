@@ -41,16 +41,24 @@ export default function ChatLayout() {
       );
     });
 
-    socket.current.on("messageRevoked", (data) => {
+    // socket.current.on("messageRevoked", (data) => {
+    //   setChatRooms((prev) =>
+    //     prev.map((room) =>
+    //       room._id === data.chatRoomId && room.lastMessage
+    //         ? { ...room, lastMessage: { ...room.lastMessage, message: "Tin nhắn đã bị thu hồi" } }
+    //         : room
+    //     )
+    //   );
+    // });
+socket.current.on("messageRevoked", (data) => {
       setChatRooms((prev) =>
         prev.map((room) =>
-          room._id === data.chatRoomId && room.lastMessage
-            ? { ...room, lastMessage: { ...room.lastMessage, message: "Tin nhắn đã bị thu hồi" } }
+          room._id === data.chatRoomId
+            ? { ...room, lastMessage: data.newLastMessage || room.lastMessage } 
             : room
         )
       );
     });
-
     return () => socket.current?.disconnect();
   }, [currentUser?._id]);
 

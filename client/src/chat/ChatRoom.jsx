@@ -667,33 +667,59 @@ export default function ChatRoom({
   };
 
   // ================= REVOKE MESSAGE =================
+  // const handleRevokeMessage = async (messageId) => {
+  //   try {
+  //     await revokeMessageApi(messageId, currentUser._id);
+
+  //     setMessages((prev) =>
+  //       prev.map((m) => (m._id === messageId ? { ...m, isDeleted: true } : m))
+  //     );
+
+  //     // Cập nhật lại sidebar ngay lập tức khi MÌNH thu hồi
+  //     setChatRooms((prev) =>
+  //       prev.map((room) =>
+  //         room._id === currentChat._id && room.lastMessage
+  //           ? { ...room, lastMessage: { ...room.lastMessage, message: "Tin nhắn đã bị thu hồi" } }
+  //           : room
+  //       )
+  //     );
+
+  //     socket.emit("revokeMessageInRoom", {
+  //       chatRoomId: currentChat._id,
+  //       messageId: messageId,
+  //     });
+  //   } catch (error) {
+  //     console.error("Lỗi khi thu hồi tin nhắn", error);
+  //     alert("Không thể thu hồi tin nhắn lúc này.");
+  //   }
+  // };
+// ================= REVOKE MESSAGE =================
   const handleRevokeMessage = async (messageId) => {
     try {
-      await revokeMessageApi(messageId, currentUser._id);
+      // Nhận dữ liệu từ Backend
+      const res = await revokeMessageApi(messageId, currentUser._id);
 
+      // Cập nhật giao diện khung chat bên phải
       setMessages((prev) =>
         prev.map((m) => (m._id === messageId ? { ...m, isDeleted: true } : m))
       );
 
-      // Cập nhật lại sidebar ngay lập tức khi MÌNH thu hồi
-      setChatRooms((prev) =>
-        prev.map((room) =>
-          room._id === currentChat._id && room.lastMessage
-            ? { ...room, lastMessage: { ...room.lastMessage, message: "Tin nhắn đã bị thu hồi" } }
-            : room
-        )
-      );
+      // Cập nhật Sidebar bên trái bằng dữ liệu chuẩn của Server
+      if (res && res.newLastMessage) {
+        setChatRooms((prev) =>
+          prev.map((room) =>
+            room._id === currentChat._id
+              ? { ...room, lastMessage: res.newLastMessage } // ✅ Cập nhật đúng tin nhắn cuối cùng
+              : room
+          )
+        );
+      }
 
-      socket.emit("revokeMessageInRoom", {
-        chatRoomId: currentChat._id,
-        messageId: messageId,
-      });
     } catch (error) {
       console.error("Lỗi khi thu hồi tin nhắn", error);
       alert("Không thể thu hồi tin nhắn lúc này.");
     }
   };
-
   // ================= RENDER =================
   return (
     <div className="h-full flex flex-col w-full bg-white">
