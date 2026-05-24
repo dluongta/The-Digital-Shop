@@ -100,28 +100,31 @@ const App = () => {
             <Route path="/payment" element={<PaymentScreen />} />
             <Route path="/placeorder" element={<PlaceOrderScreen />} />
             <Route path="/order/:id" element={<OrderScreen />} />
+            
+            {/* Admin Routes */}
             <Route path="/admin/userlist" element={<UserListScreen />} />
             <Route path="/admin/user/:id/edit" element={<UserEditScreen />} />
-            <Route path="/seller/products" element={<ProductListScreen />} />
-            <Route path="/seller/products/:pageNumber" element={<ProductListScreen />} />
-            <Route path="/seller/products/:id/edit" element={<ProductEditScreen />} />
             <Route path="/admin/orderlist" element={<OrderListScreen />} />
-            <Route path="/search/:keyword" element={<HomeScreen />} />
-            <Route path="/search/:keyword/page/:pageNumber" element={<HomeScreen />} />
+            <Route path="/admin/productlist" element={<AdminProductList />} />
             <Route path="/admin/product/:id/edit" element={<ProductEditScreen />} />
+            
+            {/* Seller Routes */}
+            <Route path="/seller/products" element={<ProductListScreen />} />
+            <Route path="/seller/products/:id/edit" element={<ProductEditScreen />} />
+            <Route path="/seller/orders" element={<SellOrdersScreen />} />
+            
+            {/* General Routes */}
+            <Route path="/search/:keyword" element={<HomeScreen />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:id/:token" element={<ResetPassword />} />
             <Route path="/orders" element={<BuyOrdersScreen />} />
-            <Route path="/seller/orders" element={<SellOrdersScreen />} />
-            <Route path="/admin/productlist" element={<AdminProductList />} />
             <Route path="/chatbot" element={<Chatbot />} />
+            <Route path="/discounts" element={<DiscountListScreen />} />
 
             <Route
               path="/chat"
               element={userInfo ? <ChatLayout /> : <Navigate to="/login" />}
             />
-
-            <Route path="/discounts" element={<DiscountListScreen />} />
           </Routes>
         </LayoutWrapper>
       </Router>

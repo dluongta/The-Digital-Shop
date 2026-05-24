@@ -18,20 +18,22 @@ import {
   login,
   register,
   checkEmailExists,
-  loginWithPasswordFromApi,
   googleLoginDirect,
 } from '../actions/userActions'
 
 const HomeScreen = () => {
-  const { keyword, pageNumber = 1 } = useParams()
+  const { keyword } = useParams() // Chỉ cần lấy keyword từ Params
   const location = useLocation()
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const [role, setRole] = useState('buyer')
+
   /* =========================
-     FILTER STATE
+     FILTER & PAGINATION STATE
   ========================= */
   const searchParams = new URLSearchParams(location.search)
+  const pageNumber = searchParams.get('pageNumber') || 1 // Đọc pageNumber từ URL ?pageNumber=...
+  
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '')
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
   const [sort, setSort] = useState(searchParams.get('sort') || '')
@@ -59,28 +61,7 @@ const HomeScreen = () => {
   /* =========================
      GOOGLE ONE TAP LOGIN
   ========================= */
-  // useGoogleOneTapLogin({
-  //   disabled: !!userInfo,
-  //   onSuccess: async (res) => {
-  //     try {
-  //       const decoded = jwtDecode(res.credential)
-  //       const { email, name } = decoded
-
-  //       const existsRes = await dispatch(checkEmailExists(email))
-
-  //       if (existsRes?.exists) {
-  //         dispatch(loginWithPasswordFromApi(email))
-  //       } else {
-  //         setGoogleUser({ name, email })
-  //         setShowModal(true)
-  //       }
-  //     } catch (err) {
-  //       console.error('Google One Tap error:', err)
-  //     }
-  //   },
-  //   onError: () => console.log('Google One Tap failed'),
-  // })
-useGoogleOneTapLogin({
+  useGoogleOneTapLogin({
     disabled: !!userInfo,
     onSuccess: async (res) => {
       try {
@@ -90,10 +71,8 @@ useGoogleOneTapLogin({
         const existsRes = await dispatch(checkEmailExists(email))
 
         if (existsRes?.exists) {
-          // Bỏ qua check pass, đăng nhập thẳng vào hệ thống
           dispatch(googleLoginDirect(email)) 
         } else {
-          // Nếu email chưa tồn tại, hiện modal yêu cầu nhập mật khẩu tạo tài khoản
           setGoogleUser({ name, email })
           setShowModal(true)
         }
@@ -103,6 +82,7 @@ useGoogleOneTapLogin({
     },
     onError: () => console.log('Google One Tap failed'),
   })
+
   /* =========================
      REGISTER FROM MODAL
   ========================= */
@@ -135,8 +115,11 @@ useGoogleOneTapLogin({
     if (minPrice) params.set('minPrice', minPrice)
     if (maxPrice) params.set('maxPrice', maxPrice)
     if (sort) params.set('sort', sort)
+    
+    // Khi áp dụng filter mới, luôn reset về trang 1
+    params.set('pageNumber', 1)
 
-    navigate(`${keyword ? `/search/${keyword}/${pageNumber}` : '/'}?${params}`)
+    navigate(`${keyword ? `/search/${keyword}` : '/'}?${params.toString()}`)
   }
 
   return (
@@ -204,14 +187,12 @@ useGoogleOneTapLogin({
         ) : (
           <>
             <LatestProducts products={products} />
-            <Paginate pages={pages} page={page} keyword={keyword || ''} />
+            <Paginate pages={pages} page={page} />
           </>
         )}
       </Container>
 
-      {/* =========================
-          GOOGLE REGISTER MODAL
-      ========================= */}
+      {/* MODAL */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Create account</Modal.Title>
@@ -221,7 +202,6 @@ useGoogleOneTapLogin({
           <p>
             Please enter a password to create your account <strong>{googleUser?.email}</strong>.
           </p>
-
           <Form.Control
             type="password"
             placeholder="Enter password"
@@ -229,15 +209,15 @@ useGoogleOneTapLogin({
             onChange={(e) => setPasswordModal(e.target.value)}
           />
           <Form.Group className="mt-3">
-          <Form.Control
-            as="select"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="buyer">Buyer (Người mua)</option>
-            <option value="seller">Seller (Người bán)</option>
-          </Form.Control>
-        </Form.Group>
+            <Form.Control
+              as="select"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+            >
+              <option value="buyer">Buyer (Người mua)</option>
+              <option value="seller">Seller (Người bán)</option>
+            </Form.Control>
+          </Form.Group>
         </Modal.Body>
         
         <Modal.Footer>

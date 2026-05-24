@@ -343,7 +343,13 @@ const server = app.listen(
 // ================= SOCKET.IO =================
 const io = new Server(server, {
   cors: {
-    origin: 'https://the-digital-shop.onrender.com/',
+    origin: [
+      "https://the-digital-shop.onrender.com", 
+      "http://localhost:3000", 
+      "http://localhost:5000",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:5000"
+    ],
     credentials: true,
   },
 });
