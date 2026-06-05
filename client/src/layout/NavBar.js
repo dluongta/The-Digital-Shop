@@ -248,6 +248,9 @@ export const NavBar = ({ socket }) => {
                 <LinkContainer to="/admin/orderlist">
                   <Nav.Link>All Orders</Nav.Link>
                 </LinkContainer>
+                <LinkContainer to="/admin/discount/create">
+                  <Nav.Link>Add Discount</Nav.Link>
+                </LinkContainer>
               </>
             )}
           </Nav>

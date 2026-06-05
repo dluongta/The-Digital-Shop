@@ -2,35 +2,27 @@ import mongoose from 'mongoose';
 
 const discountSchema = mongoose.Schema(
   {
-    code: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
-    amount: {
-      type: Number,
-      required: true,
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-    // Optional: associate discounts with specific users or categories
+    code: { type: String, required: true, unique: true },
+    description: { type: String, required: true },
+    amount: { type: Number, required: true },
+    isActive: { type: Boolean, default: true },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: false,
+      default: null,
     },
+    // ===============================================
+    // THÊM TRƯỜNG NÀY ĐỂ THEO DÕI AI ĐÃ SỬ DỤNG MÃ
+    // ===============================================
+    usedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const Discount = mongoose.model('Discount', discountSchema);
-
 export default Discount;

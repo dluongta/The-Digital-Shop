@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button, Row, Col, ListGroup, Image, Card } from 'react-bootstrap'
+import { Button, Row, Col, ListGroup, Image, Card, Form, InputGroup } from 'react-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
+import axios from 'axios'
 import Message from '../components/Message'
 import CheckoutSteps from '../components/CheckoutSteps'
 import { createOrder } from '../actions/orderActions'
@@ -11,9 +12,18 @@ import { USER_DETAILS_RESET } from '../constants/userConstants'
 const PlaceOrderScreen = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  
   const cart = useSelector((state) => state.cart)
+  const userLogin = useSelector((state) => state.userLogin)
+  const { userInfo } = userLogin 
 
   const errorRef = useRef(null)
+
+  // Tách biệt ô nhập text và mã thực tế đã áp dụng thành công
+  const [discountCodeInput, setDiscountCodeInput] = useState('')
+  const [appliedDiscount, setAppliedDiscount] = useState({ code: '', percent: 0 })
+  const [discountError, setDiscountError] = useState(null)
+  const [discountSuccess, setDiscountSuccess] = useState(null)
 
   if (!cart.shippingAddress.address) {
     navigate('/shipping')
@@ -29,10 +39,17 @@ const PlaceOrderScreen = () => {
   cart.shippingPrice = addDecimals(cart.itemsPrice > 100 ? 0 : 100)
   cart.taxPrice = addDecimals(Number((0.15 * cart.itemsPrice).toFixed(2)))
 
+  // TÍNH TOÁN LẠI CHÍNH XÁC SỐ TIỀN
+  const calculatedDiscountAmount = appliedDiscount.percent > 0 
+    ? (Number(cart.itemsPrice) * appliedDiscount.percent) / 100 
+    : 0
+  const finalDiscountAmount = Number(calculatedDiscountAmount.toFixed(2))
+
   cart.totalPrice = (
     Number(cart.itemsPrice) +
     Number(cart.shippingPrice) +
-    Number(cart.taxPrice)
+    Number(cart.taxPrice) -
+    finalDiscountAmount
   ).toFixed(2)
 
   const orderCreate = useSelector((state) => state.orderCreate)
@@ -52,6 +69,35 @@ const PlaceOrderScreen = () => {
     }
   }, [error])
 
+  const applyDiscountHandler = async (e) => {
+    e.preventDefault()
+    if (!discountCodeInput.trim()) return
+
+    try {
+      const config = {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      }
+      
+      const { data } = await axios.post('/api/discounts/apply', { code: discountCodeInput }, config)
+
+      // Cập nhật state với mã đã lưu trong DB để đảm bảo chính xác tuyệt đối
+      setAppliedDiscount({ code: data.code, percent: data.amount })
+      setDiscountSuccess(`Đã áp dụng mã giảm ${data.amount}% thành công!`)
+      setDiscountError(null)
+    } catch (err) {
+      setDiscountError(
+        err.response && err.response.data.message
+          ? err.response.data.message
+          : err.message
+      )
+      setAppliedDiscount({ code: '', percent: 0 })
+      setDiscountSuccess(null)
+    }
+  }
+
   const placeOrderHandler = () => {
     dispatch({ type: ORDER_CREATE_RESET })
 
@@ -63,6 +109,7 @@ const PlaceOrderScreen = () => {
       qty: item.qty,
     }))
 
+    // CHẮC CHẮN GỬI ĐI ĐÚNG MÃ VÀ SỐ TIỀN
     dispatch(
       createOrder({
         orderItems,
@@ -72,16 +119,11 @@ const PlaceOrderScreen = () => {
         shippingPrice: cart.shippingPrice,
         taxPrice: cart.taxPrice,
         totalPrice: cart.totalPrice,
+        discountCode: appliedDiscount.code, 
+        discountAmount: finalDiscountAmount,
       })
     )
   }
-
-  const getOutOfStockProductName = (errorMessage) => {
-    const match = errorMessage?.match(/Not enough stock for product: (.+)/)
-    return match ? match[1] : null
-  }
-
-  const outOfStockProductName = getOutOfStockProductName(error)
 
   return (
     <>
@@ -110,38 +152,24 @@ const PlaceOrderScreen = () => {
                 <Message>Your cart is empty</Message>
               ) : (
                 <ListGroup variant='flush'>
-                  {cart.cartItems.map((item, index) => {
-                    const isOutOfStock = outOfStockProductName === item.name
-
-                    return (
-                      <ListGroup.Item key={index}>
-                        <Row>
-                          <Col md={1}>
-                            <Image
-                              src={item.image}
-                              alt={item.name}
-                              fluid
-                              rounded
-                            />
-                          </Col>
-                          <Col>
-                            <Link to={`/product/${item.product}`}>
-                              {item.name}
-                            </Link>
-                            {isOutOfStock && (
-                              <div style={{ color: 'red', fontWeight: 'bold' }}>
-                                This product is out of stock
-                              </div>
-                            )}
-                          </Col>
-                          <Col md={4}>
-                            {item.qty} x ${item.price} = $
-                            {(item.qty * item.price).toFixed(2)}
-                          </Col>
-                        </Row>
-                      </ListGroup.Item>
-                    )
-                  })}
+                  {cart.cartItems.map((item, index) => (
+                    <ListGroup.Item key={index}>
+                      <Row>
+                        <Col md={1}>
+                          <Image src={item.image} alt={item.name} fluid rounded />
+                        </Col>
+                        <Col>
+                          <Link to={`/product/${item.product}`}>
+                            {item.name}
+                          </Link>
+                        </Col>
+                        <Col md={4}>
+                          {item.qty} x ${item.price} = $
+                          {(item.qty * item.price).toFixed(2)}
+                        </Col>
+                      </Row>
+                    </ListGroup.Item>
+                  ))}
                 </ListGroup>
               )}
             </ListGroup.Item>
@@ -154,6 +182,25 @@ const PlaceOrderScreen = () => {
               <ListGroup.Item>
                 <h2>Order Summary</h2>
               </ListGroup.Item>
+
+              <ListGroup.Item>
+                <Form onSubmit={applyDiscountHandler}>
+                  <InputGroup>
+                    <Form.Control
+                      type='text'
+                      placeholder='Nhập mã giảm giá...'
+                      value={discountCodeInput}
+                      onChange={(e) => setDiscountCodeInput(e.target.value)}
+                    />
+                    <Button type='submit' variant='dark'>
+                      Áp dụng
+                    </Button>
+                  </InputGroup>
+                </Form>
+                {discountError && <Message variant='danger' className='mt-2 mb-0'>{discountError}</Message>}
+                {discountSuccess && <Message variant='success' className='mt-2 mb-0'>{discountSuccess}</Message>}
+              </ListGroup.Item>
+
               <ListGroup.Item>
                 <Row>
                   <Col>Items</Col>
@@ -172,10 +219,20 @@ const PlaceOrderScreen = () => {
                   <Col>${cart.taxPrice}</Col>
                 </Row>
               </ListGroup.Item>
+
+              {appliedDiscount.percent > 0 && (
+                <ListGroup.Item>
+                  <Row>
+                    <Col>Discount ({appliedDiscount.percent}%)</Col>
+                    <Col style={{ color: 'green', fontWeight: 'bold' }}>-${finalDiscountAmount}</Col>
+                  </Row>
+                </ListGroup.Item>
+              )}
+
               <ListGroup.Item>
                 <Row>
-                  <Col>Total</Col>
-                  <Col>${cart.totalPrice}</Col>
+                  <Col><strong>Total</strong></Col>
+                  <Col><strong>${cart.totalPrice}</strong></Col>
                 </Row>
               </ListGroup.Item>
 

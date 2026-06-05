@@ -38,7 +38,7 @@ import socket from './socket';
 import { addNotification } from './actions/notificationActions';
 import ForgotPassword from './layouts/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
-
+import DiscountCreateScreen from './pages/DiscountCreateScreen';
 const Header = () => {
   const location = useLocation();
 
@@ -56,7 +56,9 @@ const LayoutWrapper = ({ children }) => {
     <>
       <Header />
 
-      <main className={isChat ? 'py-3' : 'py-3 mt-5'}>
+      <main className={isChat ? 'py-3' : 'pt-5 mt-5'}
+        style={!isChat ? { paddingTop: '120px' } : {}}
+    >
         {children}
       </main>
 
@@ -120,8 +122,7 @@ const App = () => {
             <Route path="/orders" element={<BuyOrdersScreen />} />
             <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/discounts" element={<DiscountListScreen />} />
-
-            <Route
+            <Route path="/admin/discount/create" element={<DiscountCreateScreen />} />            <Route
               path="/chat"
               element={userInfo ? <ChatLayout /> : <Navigate to="/login" />}
             />

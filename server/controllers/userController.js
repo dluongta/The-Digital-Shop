@@ -46,40 +46,40 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     password,
     role,
-    discounts: [],  // Initialize an empty array to hold references to discount documents
+    // discounts: [], 
     paypalClientId,  // Store the PayPal Client ID
   });
 
   // Default discount codes to add
-  const defaultDiscounts = [
-    { code: 'DISCOUNT10', description: '10% off your order', amount: 10 },
-    { code: 'DISCOUNT20', description: '20% off your order', amount: 20 },
-    { code: 'SALE10', description: '10% off sale items', amount: 10 },
-  ];
+  // const defaultDiscounts = [
+  //   { code: 'DISCOUNT10', description: '10% off your order', amount: 10 },
+  //   { code: 'DISCOUNT20', description: '20% off your order', amount: 20 },
+  //   { code: 'SALE10', description: '10% off sale items', amount: 10 },
+  // ];
 
   // Check if discounts already exist in the database
-  const existingDiscounts = await Discount.find({
-    code: { $in: defaultDiscounts.map(d => d.code) }  // Check if any of the discount codes already exist
-  });
+  // const existingDiscounts = await Discount.find({
+  //   code: { $in: defaultDiscounts.map(d => d.code) }  // Check if any of the discount codes already exist
+  // });
 
   // Filter out existing discounts from the new discounts list
-  const newDiscounts = defaultDiscounts.filter(discount => 
-    !existingDiscounts.some(existing => existing.code === discount.code)
-  );
+  // const newDiscounts = defaultDiscounts.filter(discount => 
+  //   !existingDiscounts.some(existing => existing.code === discount.code)
+  // );
 
   // Create discount documents for the new discounts and add to the database
-  const createdDiscounts = await Promise.all(
-    newDiscounts.map((discountData) => {
-      const discount = new Discount({
-        ...discountData,
-        userId: user._id,  // Associate discount with the user
-      });
-      return discount.save();  // Save each discount to the database
-    })
-  );
+  // const createdDiscounts = await Promise.all(
+  //   newDiscounts.map((discountData) => {
+  //     const discount = new Discount({
+  //       ...discountData,
+  //       userId: user._id,  // Associate discount with the user
+  //     });
+  //     return discount.save();  // Save each discount to the database
+  //   })
+  // );
 
   // Assign the created discount documents to the user's discount field
-  user.discounts = createdDiscounts.map((discount) => discount._id);  // Store the references to discount documents
+  // user.discounts = createdDiscounts.map((discount) => discount._id);  // Store the references to discount documents
 
   // Save the user with the associated discount references
   await user.save();
@@ -92,7 +92,7 @@ const registerUser = asyncHandler(async (req, res) => {
       email: user.email,
       isAdmin: user.isAdmin,
       role: user.role,
-      discounts: user.discounts,  // Send the discount IDs back in the response
+      // discounts: user.discounts,  // Send the discount IDs back in the response
       paypalClientId: user.paypalClientId,  // Return PayPal Client ID
       token: generateToken(user._id),
     });
