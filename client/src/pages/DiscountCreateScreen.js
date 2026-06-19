@@ -104,7 +104,7 @@ const DiscountCreateScreen = () => {
               type="email" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
-              placeholder="Nhập email (VD: khachhang@gmail.com)" 
+              placeholder="Nhập email người dùng" 
               required 
             />
           </Form.Group>
