@@ -144,7 +144,7 @@ export const NavBar = ({ socket }) => {
                       key={n._id}
                       onClick={() => handleNotificationClick(n)}
                       style={{
-                        backgroundColor: n.isRead ? '#66ccff' : '#0368f5',
+                        backgroundColor: n.isRead ? '#87CEFA' : '#0368f5',
                         fontWeight: n.isRead ? 'normal' : 'bold',
                         color: '#000',
                         whiteSpace: 'normal',
