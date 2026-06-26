@@ -64,10 +64,8 @@ export const NavBar = ({ socket }) => {
   };
 
   const handleNotificationClick = (notification) => {
-    // Đánh dấu là đã đọc trong Database
     dispatch(markNotificationRead(notification._id));
 
-    // Chuyển hướng người dùng đến link liên kết (ví dụ: phòng chat)
     if (notification.link) {
       navigate(notification.link);
     }
@@ -146,7 +144,7 @@ export const NavBar = ({ socket }) => {
                       key={n._id}
                       onClick={() => handleNotificationClick(n)}
                       style={{
-                        backgroundColor: n.isRead ? '#fff' : '#0368f5',
+                        backgroundColor: n.isRead ? '#5394cd' : '#0368f5',
                         fontWeight: n.isRead ? 'normal' : 'bold',
                         color: '#000',
                         whiteSpace: 'normal',
