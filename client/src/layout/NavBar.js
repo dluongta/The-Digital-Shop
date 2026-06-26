@@ -155,15 +155,15 @@ export const NavBar = ({ socket }) => {
                     >
                       <div className="d-flex justify-content-between">
                         <span>{n.title}</span>
-                        {!n.isRead && <Badge
+                        {/* {!n.isRead && <Badge
                           pill
                           style={{
                             backgroundColor: '#ff5608',
-                            color: '#000',
+                            color: '#fff',
                           }}
                         >
                           New
-                        </Badge>}
+                        </Badge>} */}
                       </div>
                       <small className="text-muted d-block">{n.message}</small>
                       <div className="text-end text-muted" style={{ fontSize: '0.7rem' }}>
