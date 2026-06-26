@@ -148,7 +148,7 @@ export const NavBar = ({ socket }) => {
                         fontWeight: n.isRead ? 'normal' : 'bold',
                         color: '#000',
                         whiteSpace: 'normal',
-                        borderBottom: '1px solid #eee'
+                        borderBottom: '1px solid #000'
                       }}
                     >
                       <div className="d-flex justify-content-between">
