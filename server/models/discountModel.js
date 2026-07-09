@@ -5,15 +5,18 @@ const discountSchema = mongoose.Schema(
     code: { type: String, required: true, unique: true },
     description: { type: String, required: true },
     amount: { type: Number, required: true },
+    discountType: {
+      type: String,
+      enum: ['percent', 'fixed'], // 'percent' = phần trăm, 'fixed' = số tiền cố định
+      default: 'percent',
+      required: true,
+    },
     isActive: { type: Boolean, default: true },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
     },
-    // ===============================================
-    // THÊM TRƯỜNG NÀY ĐỂ THEO DÕI AI ĐÃ SỬ DỤNG MÃ
-    // ===============================================
     usedBy: [
       {
         type: mongoose.Schema.Types.ObjectId,

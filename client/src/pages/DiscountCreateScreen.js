@@ -8,8 +8,9 @@ const DiscountCreateScreen = () => {
   const [code, setCode] = useState('');
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
-  const [assignType, setAssignType] = useState('all'); // 'all' hoặc 'specific'
-  const [email, setEmail] = useState(''); // THAY ĐỔI: Sử dụng email thay vì userId
+  const [discountType, setDiscountType] = useState('percent'); // THÊM STATE CHO LOẠI GIẢM GIÁ
+  const [assignType, setAssignType] = useState('all'); 
+  const [email, setEmail] = useState(''); 
   
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
@@ -27,11 +28,12 @@ const DiscountCreateScreen = () => {
         },
       };
 
-      // THAY ĐỔI: Gửi email thay vì userId lên server
+      // Thêm discountType vào payload
       const payload = {
         code,
         description,
         amount: Number(amount),
+        discountType, // Gửi loại giảm giá lên server
         email: assignType === 'specific' ? email : null,
       };
 
@@ -39,10 +41,11 @@ const DiscountCreateScreen = () => {
       setMessage('Tạo mã giảm giá thành công!');
       setError(null);
       
-      // Reset form sau khi tạo thành công (Tuỳ chọn)
+      // Reset form
       setCode('');
       setDescription('');
       setAmount('');
+      setDiscountType('percent');
       setEmail('');
       setAssignType('all');
 
@@ -54,7 +57,7 @@ const DiscountCreateScreen = () => {
 
   return (
     <div>
-      <h1>Tạo Mã Giảm Giá (Admin)</h1>
+      <h1>Tạo Mã Giảm Giá</h1>
       {message && <Message variant="success">{message}</Message>}
       {error && <Message variant="danger">{error}</Message>}
 
@@ -79,8 +82,17 @@ const DiscountCreateScreen = () => {
           />
         </Form.Group>
 
+        <Form.Group controlId="discountType" className="mb-3">
+          <Form.Label>Loại giảm giá</Form.Label>
+          <Form.Control as="select" value={discountType} onChange={(e) => setDiscountType(e.target.value)}>
+            <option value="percent">Giảm theo phần trăm (%)</option>
+            <option value="fixed">Giảm số tiền cụ thể (VNĐ)</option>
+          </Form.Control>
+        </Form.Group>
+
         <Form.Group controlId="amount" className="mb-3">
-          <Form.Label>Phần trăm giảm (%)</Form.Label>
+          {/* Đổi Label dựa theo loại giảm giá */}
+          <Form.Label>{discountType === 'percent' ? 'Phần trăm giảm (%)' : 'Số tiền giảm (VNĐ)'}</Form.Label>
           <Form.Control 
             type="number" 
             value={amount} 

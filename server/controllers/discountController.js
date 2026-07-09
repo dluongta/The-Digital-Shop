@@ -1,6 +1,6 @@
 import asyncHandler from 'express-async-handler';
 import Discount from '../models/discountModel.js';
-import User from '../models/userModel.js'; // THÊM IMPORT NÀY ĐỂ TÌM USER BẰNG EMAIL
+import User from '../models/userModel.js';
 
 // @desc    Lấy danh sách mã giảm giá cho User hiện tại
 // @route   GET /api/discounts
@@ -40,15 +40,16 @@ const applyDiscount = asyncHandler(async (req, res) => {
     throw new Error('Bạn đã sử dụng mã giảm giá này trước đây rồi!');
   }
 
-  res.json({ amount: discount.amount, code: discount.code });
+  // TRẢ VỀ CẢ DISCOUNT TYPE
+  res.json({ amount: discount.amount, code: discount.code, discountType: discount.discountType });
 });
 
 // @desc    Admin tạo mã giảm giá mới
 // @route   POST /api/discounts/create
 // @access  Private/Admin
 const createDiscount = asyncHandler(async (req, res) => {
-  // Thay đổi: Nhận email từ req.body thay vì userId
-  const { code, description, amount, email } = req.body;
+  // Nhận thêm discountType
+  const { code, description, amount, discountType, email } = req.body;
 
   const discountExists = await Discount.findOne({ code: code.trim().toUpperCase() });
   if (discountExists) {
@@ -72,8 +73,9 @@ const createDiscount = asyncHandler(async (req, res) => {
     code: code.trim().toUpperCase(),
     description,
     amount,
-    userId: assignedUserId, // Lưu ID vào database
-    usedBy: [], // Khởi tạo danh sách trống
+    discountType: discountType || 'percent', // Lưu loại giảm giá
+    userId: assignedUserId, 
+    usedBy: [],
   });
 
   const createdDiscount = await discount.save();
