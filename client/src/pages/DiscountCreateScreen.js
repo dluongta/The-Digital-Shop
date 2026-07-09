@@ -86,13 +86,13 @@ const DiscountCreateScreen = () => {
           <Form.Label>Loại giảm giá</Form.Label>
           <Form.Control as="select" value={discountType} onChange={(e) => setDiscountType(e.target.value)}>
             <option value="percent">Giảm theo phần trăm (%)</option>
-            <option value="fixed">Giảm số tiền cụ thể (VNĐ)</option>
+            <option value="fixed">Giảm số tiền cụ thể (USD)</option>
           </Form.Control>
         </Form.Group>
 
         <Form.Group controlId="amount" className="mb-3">
           {/* Đổi Label dựa theo loại giảm giá */}
-          <Form.Label>{discountType === 'percent' ? 'Phần trăm giảm (%)' : 'Số tiền giảm (VNĐ)'}</Form.Label>
+          <Form.Label>{discountType === 'percent' ? 'Phần trăm giảm (%)' : 'Số tiền giảm (USD)'}</Form.Label>
           <Form.Control 
             type="number" 
             value={amount} 
