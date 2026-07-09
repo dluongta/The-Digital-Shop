@@ -19,9 +19,9 @@ const PlaceOrderScreen = () => {
 
   const errorRef = useRef(null)
 
-  // Tách biệt ô nhập text và mã thực tế đã áp dụng thành công
   const [discountCodeInput, setDiscountCodeInput] = useState('')
-  const [appliedDiscount, setAppliedDiscount] = useState({ code: '', percent: 0 })
+  // CẬP NHẬT: Đổi `percent` thành `amount` và thêm `discountType` vào state
+  const [appliedDiscount, setAppliedDiscount] = useState({ code: '', amount: 0, discountType: 'percent' })
   const [discountError, setDiscountError] = useState(null)
   const [discountSuccess, setDiscountSuccess] = useState(null)
 
@@ -39,18 +39,29 @@ const PlaceOrderScreen = () => {
   cart.shippingPrice = addDecimals(cart.itemsPrice > 100 ? 0 : 100)
   cart.taxPrice = addDecimals(Number((0.15 * cart.itemsPrice).toFixed(2)))
 
-  // TÍNH TOÁN LẠI CHÍNH XÁC SỐ TIỀN
-  const calculatedDiscountAmount = appliedDiscount.percent > 0 
-    ? (Number(cart.itemsPrice) * appliedDiscount.percent) / 100 
-    : 0
+  // ==========================================
+  // CẬP NHẬT: TÍNH TOÁN LẠI DỰA TRÊN LOẠI GIẢM GIÁ
+  // ==========================================
+  let calculatedDiscountAmount = 0
+  if (appliedDiscount.amount > 0) {
+    if (appliedDiscount.discountType === 'fixed') {
+      calculatedDiscountAmount = Number(appliedDiscount.amount)
+    } else {
+      // Tính theo phần trăm
+      calculatedDiscountAmount = (Number(cart.itemsPrice) * appliedDiscount.amount) / 100
+    }
+  }
+  
   const finalDiscountAmount = Number(calculatedDiscountAmount.toFixed(2))
 
-  cart.totalPrice = (
+  // Đảm bảo tổng tiền không bị âm nếu mã giảm giá fixed lớn hơn tổng đơn hàng
+  let calculatedTotal = (
     Number(cart.itemsPrice) +
     Number(cart.shippingPrice) +
     Number(cart.taxPrice) -
     finalDiscountAmount
-  ).toFixed(2)
+  )
+  cart.totalPrice = calculatedTotal > 0 ? calculatedTotal.toFixed(2) : "0.00"
 
   const orderCreate = useSelector((state) => state.orderCreate)
   const { order, success, error } = orderCreate
@@ -83,9 +94,19 @@ const PlaceOrderScreen = () => {
       
       const { data } = await axios.post('/api/discounts/apply', { code: discountCodeInput }, config)
 
-      // Cập nhật state với mã đã lưu trong DB để đảm bảo chính xác tuyệt đối
-      setAppliedDiscount({ code: data.code, percent: data.amount })
-      setDiscountSuccess(`Đã áp dụng mã giảm ${data.amount}% thành công!`)
+      // Cập nhật state với loại giảm giá (discountType) trả về từ server
+      setAppliedDiscount({ 
+        code: data.code, 
+        amount: data.amount, 
+        discountType: data.discountType || 'percent' 
+      })
+
+      // Thông báo linh hoạt theo loại giảm giá
+      const successMsg = data.discountType === 'fixed' 
+        ? `Đã áp dụng mã giảm $${data.amount} thành công!`
+        : `Đã áp dụng mã giảm ${data.amount}% thành công!`
+      
+      setDiscountSuccess(successMsg)
       setDiscountError(null)
     } catch (err) {
       setDiscountError(
@@ -93,7 +114,7 @@ const PlaceOrderScreen = () => {
           ? err.response.data.message
           : err.message
       )
-      setAppliedDiscount({ code: '', percent: 0 })
+      setAppliedDiscount({ code: '', amount: 0, discountType: 'percent' })
       setDiscountSuccess(null)
     }
   }
@@ -109,7 +130,6 @@ const PlaceOrderScreen = () => {
       qty: item.qty,
     }))
 
-    // CHẮC CHẮN GỬI ĐI ĐÚNG MÃ VÀ SỐ TIỀN
     dispatch(
       createOrder({
         orderItems,
@@ -220,10 +240,15 @@ const PlaceOrderScreen = () => {
                 </Row>
               </ListGroup.Item>
 
-              {appliedDiscount.percent > 0 && (
+              {/* CẬP NHẬT: Hiển thị Đơn vị giảm giá cho phù hợp */}
+              {appliedDiscount.amount > 0 && (
                 <ListGroup.Item>
                   <Row>
-                    <Col>Discount ({appliedDiscount.percent}%)</Col>
+                    <Col>
+                      Discount {appliedDiscount.discountType === 'fixed' 
+                        ? `($${appliedDiscount.amount})` 
+                        : `(${appliedDiscount.amount}%)`}
+                    </Col>
                     <Col style={{ color: 'green', fontWeight: 'bold' }}>-${finalDiscountAmount}</Col>
                   </Row>
                 </ListGroup.Item>
