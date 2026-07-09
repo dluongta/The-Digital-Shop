@@ -39,9 +39,6 @@ const PlaceOrderScreen = () => {
   cart.shippingPrice = addDecimals(cart.itemsPrice > 100 ? 0 : 100)
   cart.taxPrice = addDecimals(Number((0.15 * cart.itemsPrice).toFixed(2)))
 
-  // ==========================================
-  // CẬP NHẬT: TÍNH TOÁN LẠI DỰA TRÊN LOẠI GIẢM GIÁ
-  // ==========================================
   let calculatedDiscountAmount = 0
   if (appliedDiscount.amount > 0) {
     if (appliedDiscount.discountType === 'fixed') {
