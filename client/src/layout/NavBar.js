@@ -46,10 +46,6 @@ export const NavBar = ({ socket }) => {
     const handleNewNotification = (data) => {
       // Khi có tin nhắn mới, không dùng Toast nữa mà gọi action để cập nhật lại danh sách trong Dropdown
       dispatch(listNotifications());
-
-      // Tùy chọn: Bạn có thể thêm hiệu ứng âm thanh nhỏ tại đây
-      // const audio = new Audio('/sounds/notification_ping.mp3');
-      // audio.play().catch(e => console.log("Audio play failed", e));
     };
 
     socket.current.on("newNotification", handleNewNotification);
@@ -88,19 +84,28 @@ export const NavBar = ({ socket }) => {
                 <Dropdown.Toggle
                   variant="dark"
                   id="dropdown-notification"
-                  className="position-relative"
+                  className="position-relative no-caret" /* <--- Thêm no-caret vào đây */
                 >
                   <i className="fas fa-bell"></i> Notification
 
-                  {/* Hiển thị số lượng tin nhắn chưa đọc trên icon chuông */}
                   {unreadCount > 0 && (
-                    <Badge
-                      bg="danger"
-                      pill
-                      className="position-absolute top-0 start-100 translate-middle"
+                    <span
+                      className="position-absolute translate-middle d-flex align-items-center justify-content-center"
+                      style={{
+                        top: '5px',
+                        left: '100%',
+                        backgroundColor: 'red',
+                        color: 'white',
+                        borderRadius: '50%',
+                        width: '20px',
+                        height: '20px',
+                        fontSize: '11px',
+                        fontWeight: 'bold',
+                        padding: 0
+                      }}
                     >
-                      {unreadCount}
-                    </Badge>
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
                   )}
                 </Dropdown.Toggle>
 
@@ -135,10 +140,7 @@ export const NavBar = ({ socket }) => {
                     </Dropdown.Item>
                   )}
 
-
-
-
-                  {/* Hiển thị danh sách thông báo (Bao gồm cả tin nhắn mới từ Socket) */}
+                  {/* Hiển thị danh sách thông báo */}
                   {notifications.map((n) => (
                     <Dropdown.Item
                       key={n._id}
@@ -181,11 +183,9 @@ export const NavBar = ({ socket }) => {
             </LinkContainer>
 
             <LinkContainer to="/chatbot">
-
               <Nav.Link>
-
-                <i className="fas fa-message"></i> Chatbot              </Nav.Link>
-
+                <i className="fas fa-message"></i> Chatbot
+              </Nav.Link>
             </LinkContainer>
 
             <LinkContainer to="/cart">
@@ -208,7 +208,7 @@ export const NavBar = ({ socket }) => {
             )}
 
             {userInfo && (
-              <NavDropdown title="Orders">
+              <NavDropdown title="Orders" className="no-caret"> {/* <--- Thêm no-caret vào đây */}
                 <LinkContainer to="/orders">
                   <NavDropdown.Item>My Orders</NavDropdown.Item>
                 </LinkContainer>

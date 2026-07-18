@@ -215,3 +215,8 @@ body,
 .footer-custom p:last-child {
   margin-bottom: 0;
 }
+
+.no-caret::after,
+.no-caret .dropdown-toggle::after {
+    display: none !important;
+}
