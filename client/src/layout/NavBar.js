@@ -14,37 +14,27 @@ import {
   markAllNotificationsRead,
 } from '../actions/notificationActions';
 
-// Nhận socket từ props (được truyền từ App.js)
 export const NavBar = ({ socket }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // USER
   const { userInfo } = useSelector((state) => state.userLogin);
-
-  // CART
   const { cartItems } = useSelector((state) => state.cart);
-
-  // NOTIFICATIONS
   const notificationList = useSelector((state) => state.notificationList);
   const { notifications = [] } = notificationList;
 
-  // Tính số lượng chưa đọc để hiển thị Badge số đỏ
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  // 1. Fetch danh sách thông báo từ Database khi người dùng đăng nhập
   useEffect(() => {
     if (userInfo) {
       dispatch(listNotifications());
     }
   }, [dispatch, userInfo]);
 
-  // 2. Lắng nghe sự kiện Socket để cập nhật thông báo thời gian thực
   useEffect(() => {
     if (!socket?.current || !userInfo) return;
 
     const handleNewNotification = (data) => {
-      // Khi có tin nhắn mới, không dùng Toast nữa mà gọi action để cập nhật lại danh sách trong Dropdown
       dispatch(listNotifications());
     };
 
@@ -78,13 +68,12 @@ export const NavBar = ({ socket }) => {
         <Navbar.Collapse>
           <Nav className="ms-auto align-items-center">
 
-            {/* PHẦN NOTIFICATION CỦA BẠN */}
             {userInfo && (
-              <Dropdown align="end" className="me-3">
+              <Dropdown align="end" as={Nav.Item} className="me-3">
                 <Dropdown.Toggle
-                  variant="dark"
+                  as={Nav.Link}
                   id="dropdown-notification"
-                  className="position-relative no-caret" /* <--- Thêm no-caret vào đây */
+                  className="position-relative no-caret"
                 >
                   <i className="fas fa-bell"></i> Notification
 
@@ -101,7 +90,8 @@ export const NavBar = ({ socket }) => {
                         height: '20px',
                         fontSize: '11px',
                         fontWeight: 'bold',
-                        padding: 0
+                        padding: 0,
+                        zIndex: 1
                       }}
                     >
                       {unreadCount > 99 ? '99+' : unreadCount}
@@ -110,64 +100,95 @@ export const NavBar = ({ socket }) => {
                 </Dropdown.Toggle>
 
                 <Dropdown.Menu
-                  className="notification-menu"
                   style={{
                     width: '320px',
                     maxHeight: '400px',
                     overflowY: 'auto',
+                    padding: 0,
+                    border: 'none',
+                    backgroundColor: '#fff'
                   }}
                 >
-
-                  {/* Nút đánh dấu tất cả đã đọc */}
+                  {/* --- FIX LỖI HOVER CHỖ NÀY --- */}
                   {unreadCount > 0 && (
-                    <>
-                      <Dropdown.Item
-                        className="notification-action text-center fw-bold"
-                        onClick={() => dispatch(markAllNotificationsRead())}
+                    <Dropdown.Item
+                      className="p-0 m-0 border-0"
+                      onClick={() => dispatch(markAllNotificationsRead())}
+                    >
+                      <div
+                        className="text-center fw-bold p-3"
+                        style={{
+                          backgroundColor: '#212529',
+                          color: '#4dabf7',
+                          borderBottom: '1px solid #404953',
+                          display: 'block',
+                          width: '100%',
+                        }}
+                        onMouseEnter={(e) => {
+                          // Ép cứng màu nền và màu chữ khi hover không cho thay đổi
+                          e.currentTarget.style.backgroundColor = '#212529';
+                          e.currentTarget.style.color = '#4dabf7';
+                        }}
                       >
                         <i className="fas fa-check-double me-2"></i>
                         Mark all as read
-                      </Dropdown.Item>
-
-                      <Dropdown.Divider />
-                    </>
-                  )}
-
-                  {/* Trường hợp không có thông báo nào */}
-                  {notifications.length === 0 && (
-                    <Dropdown.Item className="notification-empty text-center">
-                      Không có thông báo mới
+                      </div>
                     </Dropdown.Item>
                   )}
+                  {/* ----------------------------- */}
 
-                  {/* Hiển thị danh sách thông báo */}
+                  {notifications.length === 0 && (
+                    <div 
+                      className="text-center p-3"
+                      style={{
+                        backgroundColor: '#404953',
+                        color: '#ffffff',
+                      }}
+                    >
+                      Không có thông báo mới
+                    </div>
+                  )}
+
                   {notifications.map((n) => (
                     <Dropdown.Item
                       key={n._id}
                       onClick={() => handleNotificationClick(n)}
-                      style={{
-                        backgroundColor: n.isRead ? '#87CEFA' : '#0368f5',
-                        fontWeight: n.isRead ? 'normal' : 'bold',
-                        color: '#000',
-                        whiteSpace: 'normal',
-                        borderBottom: '1px solid #000'
-                      }}
+                      className="p-0 m-0 border-0"
                     >
-                      <div className="d-flex justify-content-between">
-                        <span>{n.title}</span>
-                        {!n.isRead && <Badge
-                          pill
-                          style={{
-                            backgroundColor: '#ff5608',
-                            color: '#fff',
-                          }}
-                        >
-                          New
-                        </Badge>}
-                      </div>
-                      <small className="text-muted d-block">{n.message}</small>
-                      <div className="text-end text-muted" style={{ fontSize: '0.7rem' }}>
-                        {new Date(n.createdAt).toLocaleTimeString()}
+                      <div
+                        style={{
+                          padding: '12px 16px',
+                          backgroundColor: n.isRead ? '#87CEFA' : '#0368f5',
+                          color: '#000',
+                          fontWeight: n.isRead ? 'normal' : 'bold',
+                          borderBottom: '1px solid #ddd',
+                          display: 'block',
+                          width: '100%',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = n.isRead ? '#87CEFA' : '#0368f5';
+                        }}
+                      >
+                        <div className="d-flex justify-content-between align-items-center mb-1">
+                          <span>{n.title}</span>
+                          {!n.isRead && (
+                            <Badge
+                              pill
+                              style={{
+                                backgroundColor: '#ff5608',
+                                color: '#fff',
+                              }}
+                            >
+                              New
+                            </Badge>
+                          )}
+                        </div>
+                        <small className="d-block mb-1" style={{ color: '#212529' }}>
+                          {n.message}
+                        </small>
+                        <div className="text-end" style={{ fontSize: '0.75rem', color: '#495057' }}>
+                          {new Date(n.createdAt).toLocaleTimeString()}
+                        </div>
                       </div>
                     </Dropdown.Item>
                   ))}
@@ -175,7 +196,6 @@ export const NavBar = ({ socket }) => {
               </Dropdown>
             )}
 
-            {/* CÁC MENU KHÁC GIỮ NGUYÊN */}
             <LinkContainer to="/chat">
               <Nav.Link>
                 <i className="fas fa-comment"></i> Chat
@@ -208,7 +228,7 @@ export const NavBar = ({ socket }) => {
             )}
 
             {userInfo && (
-              <NavDropdown title="Orders" className="no-caret"> {/* <--- Thêm no-caret vào đây */}
+              <NavDropdown title="Orders" className="no-caret">
                 <LinkContainer to="/orders">
                   <NavDropdown.Item>My Orders</NavDropdown.Item>
                 </LinkContainer>

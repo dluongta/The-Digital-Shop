@@ -146,13 +146,6 @@ li::marker {
   padding: 12px 16px;
 }
 
-.notification-empty:hover,
-.notification-empty:active,
-.notification-empty:focus {
-  background-color: #404953 !important;
-  color: #ffffff !important;
-}
-
 .notification-menu .dropdown-divider {
   border-top: 1px solid #404953 !important;
   margin: 0 !important;
@@ -162,12 +155,6 @@ li::marker {
   background-color: #212529 !important;
   color: #4dabf7 !important;
   cursor: pointer;
-}
-
-.notification-action:hover,
-.notification-action:focus {
-  background-color: #2c3034 !important;
-  color: #74c0fc !important;
 }
 
 html,
@@ -197,7 +184,7 @@ body,
 
 .footer-brand i,
 .footer-brand svg {
-  font-size: 22px;    
+  font-size: 22px;
 }
 
 .footer-custom h5 {
@@ -218,5 +205,77 @@ body,
 
 .no-caret::after,
 .no-caret .dropdown-toggle::after {
-    display: none !important;
+  display: none !important;
+}
+
+.notification-unread {
+  background-color: #0368f5 !important;
+  font-weight: bold !important;
+  color: #000 !important;
+  white-space: normal;
+  border-bottom: 1px solid #ddd;
+  border-radius: 0 !important;
+}
+
+.notification-unread:hover,
+.notification-unread:focus,
+.notification-unread:active {
+  background-color: #0368f5 !important;
+  color: #000 !important;
+}
+
+.notification-read {
+  background-color: #87CEFA !important;
+  font-weight: normal !important;
+  color: #000 !important;
+  white-space: normal;
+  border-bottom: 1px solid #ddd;
+  border-radius: 0 !important;
+}
+
+.notification-read:hover,
+.notification-read:focus,
+.notification-read:active {
+  background-color: #87CEFA !important;
+  color: #000 !important;
+}
+
+.notification-menu {
+  padding: 0 !important;
+  background-color: #fff;
+}
+
+.notification-menu .dropdown-item {
+  border-radius: 0 !important;
+  margin: 0 !important;
+}
+
+.notification-menu .dropdown-item.notification-unread {
+  background-color: #0368f5 !important;
+  font-weight: bold !important;
+  color: #000 !important;
+  white-space: normal;
+  border-bottom: 1px solid #ddd;
+}
+
+.notification-menu .dropdown-item.notification-unread:hover,
+.notification-menu .dropdown-item.notification-unread:focus,
+.notification-menu .dropdown-item.notification-unread:active {
+  background-color: #0368f5 !important;
+  color: #000 !important;
+}
+
+.notification-menu .dropdown-item.notification-read {
+  background-color: #87CEFA !important;
+  font-weight: normal !important;
+  color: #000 !important;
+  white-space: normal;
+  border-bottom: 1px solid #ddd;
+}
+
+.notification-menu .dropdown-item.notification-read:hover,
+.notification-menu .dropdown-item.notification-read:focus,
+.notification-menu .dropdown-item.notification-read:active {
+  background-color: #87CEFA !important;
+  color: #000 !important;
 }
