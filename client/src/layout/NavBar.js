@@ -73,7 +73,7 @@ export const NavBar = ({ socket }) => {
                 <Dropdown.Toggle
                   as={Nav.Link}
                   id="dropdown-notification"
-                  className="position-relative no-caret"
+                  className="position-relative"
                 >
                   <i className="fas fa-bell"></i> Notification
 
@@ -109,7 +109,6 @@ export const NavBar = ({ socket }) => {
                     backgroundColor: '#fff'
                   }}
                 >
-                  {/* --- FIX LỖI HOVER CHỖ NÀY --- */}
                   {unreadCount > 0 && (
                     <Dropdown.Item
                       className="p-0 m-0 border-0"
@@ -228,7 +227,7 @@ export const NavBar = ({ socket }) => {
             )}
 
             {userInfo && (
-              <NavDropdown title="Orders" className="no-caret">
+              <NavDropdown title="Orders">
                 <LinkContainer to="/orders">
                   <NavDropdown.Item>My Orders</NavDropdown.Item>
                 </LinkContainer>
