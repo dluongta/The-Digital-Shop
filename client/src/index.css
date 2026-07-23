@@ -2,8 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-main {
+/* main {
   min-height: 100vh;
+} */
+
+main:not(.chat-main){
+    min-height:100vh;
 }
 
 h3 {

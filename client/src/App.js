@@ -75,17 +75,15 @@ const LayoutWrapper = ({ children }) => {
       <Header />
 
       <main
+        className={isChat ? "chat-main" : ""}
         style={
           isChat
             ? {
-                height: `${appHeight}px`,
-                overflow: "hidden",
-                margin: 0,
-                padding: 0,
-              }
-            : {
-                paddingTop: "120px",
-              }
+              height: window.innerHeight,
+              minHeight: 0,
+              overflow: "hidden"
+            }
+            : {}
         }
       >
         {children}
