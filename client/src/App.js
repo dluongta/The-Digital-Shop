@@ -58,11 +58,12 @@ const LayoutWrapper = ({ children }) => {
       <Header />
 
       <main
+        className={isChat ? 'overflow-hidden' : 'pt-5 mt-5'}
         style={
           isChat
             ? {
-              height: "var(--app-height)",
-              overflow: "hidden",
+              height: "100dvh",
+              margin: 0,
             }
             : {
               paddingTop: "120px",
@@ -96,20 +97,7 @@ const App = () => {
       socket.disconnect();
     };
   }, [userInfo, dispatch]);
-  useEffect(() => {
-    const setHeight = () => {
-      document.documentElement.style.setProperty(
-        "--app-height",
-        `${window.innerHeight}px`
-      );
-    };
 
-    setHeight();
-
-    window.addEventListener("resize", setHeight);
-
-    return () => window.removeEventListener("resize", setHeight);
-  }, []);
   return (
     <AuthProvider>
       <Router>
