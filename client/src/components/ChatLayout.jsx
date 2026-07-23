@@ -82,9 +82,7 @@ export default function ChatLayout() {
   };
 
   return (
-    // ⚠️ QUAN TRỌNG: h-screen và overflow-hidden giúp bao bọc toàn bộ khung chat vừa khít màn hình
-    <div className="flex flex-col h-screen w-full bg-white overflow-hidden">
-
+    <div className="flex flex-col h-full w-full bg-white overflow-hidden">
       <div className="shrink-0">
         <Header />
       </div>

@@ -39,6 +39,7 @@ import { addNotification } from './actions/notificationActions';
 import ForgotPassword from './layouts/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import DiscountCreateScreen from './pages/DiscountCreateScreen';
+
 const Header = () => {
   const location = useLocation();
 
@@ -56,13 +57,15 @@ const LayoutWrapper = ({ children }) => {
     <>
       <Header />
 
-      <main className={isChat ? 'py-3' : 'pt-5 mt-5'}
-        style={!isChat ? { paddingTop: '120px' } : {}}
-    >
+      {/* ĐÃ SỬA: Thêm style và className để khóa cứng chiều cao khi ở trang Chat */}
+      <main 
+        className={isChat ? 'h-screen overflow-hidden' : 'pt-5 mt-5'}
+        style={!isChat ? { paddingTop: '120px' } : { height: '100vh', margin: 0 }}
+      >
         {children}
       </main>
 
-      <Footer />
+      {!isChat && <Footer />}
     </>
   );
 };
@@ -102,19 +105,19 @@ const App = () => {
             <Route path="/payment" element={<PaymentScreen />} />
             <Route path="/placeorder" element={<PlaceOrderScreen />} />
             <Route path="/order/:id" element={<OrderScreen />} />
-            
+
             {/* Admin Routes */}
             <Route path="/admin/userlist" element={<UserListScreen />} />
             <Route path="/admin/user/:id/edit" element={<UserEditScreen />} />
             <Route path="/admin/orderlist" element={<OrderListScreen />} />
             <Route path="/admin/productlist" element={<AdminProductList />} />
             <Route path="/admin/product/:id/edit" element={<ProductEditScreen />} />
-            
+
             {/* Seller Routes */}
             <Route path="/seller/products" element={<ProductListScreen />} />
             <Route path="/seller/products/:id/edit" element={<ProductEditScreen />} />
             <Route path="/seller/orders" element={<SellOrdersScreen />} />
-            
+
             {/* General Routes */}
             <Route path="/search/:keyword" element={<HomeScreen />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -122,7 +125,10 @@ const App = () => {
             <Route path="/orders" element={<BuyOrdersScreen />} />
             <Route path="/chatbot" element={<Chatbot />} />
             <Route path="/discounts" element={<DiscountListScreen />} />
-            <Route path="/admin/discount/create" element={<DiscountCreateScreen />} />            <Route
+            <Route path="/admin/discount/create" element={<DiscountCreateScreen />} />
+
+            {/* Chat Route */}
+            <Route
               path="/chat"
               element={userInfo ? <ChatLayout /> : <Navigate to="/login" />}
             />
