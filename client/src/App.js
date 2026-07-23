@@ -57,10 +57,17 @@ const LayoutWrapper = ({ children }) => {
     <>
       <Header />
 
-      {/* ĐÃ SỬA: Thêm style và className để khóa cứng chiều cao khi ở trang Chat */}
-      <main 
-        className={isChat ? 'h-screen overflow-hidden' : 'pt-5 mt-5'}
-        style={!isChat ? { paddingTop: '120px' } : { height: '100vh', margin: 0 }}
+      <main
+        style={
+          isChat
+            ? {
+              height: "var(--app-height)",
+              overflow: "hidden",
+            }
+            : {
+              paddingTop: "120px",
+            }
+        }
       >
         {children}
       </main>
@@ -89,7 +96,20 @@ const App = () => {
       socket.disconnect();
     };
   }, [userInfo, dispatch]);
+  useEffect(() => {
+    const setHeight = () => {
+      document.documentElement.style.setProperty(
+        "--app-height",
+        `${window.innerHeight}px`
+      );
+    };
 
+    setHeight();
+
+    window.addEventListener("resize", setHeight);
+
+    return () => window.removeEventListener("resize", setHeight);
+  }, []);
   return (
     <AuthProvider>
       <Router>
