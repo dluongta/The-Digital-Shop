@@ -21,16 +21,12 @@ export default function ChatLayout() {
   const { currentUser } = useAuth();
   const { initiateSocketConnection, getAllUsers, getChatRooms } = useApi();
 
-  // ================= SOCKET =================
-  // ================= SOCKET =================
   useEffect(() => {
     if (!currentUser?._id) return;
-    
-    // (Bắt buộc dùng setSocket nếu bạn đã đổi sang useState như hướng dẫn trước, 
-    // nếu bạn vẫn đang dùng useRef thì giữ nguyên socket.current nhé)
+
     socket.current = initiateSocketConnection();
     socket.current.emit("addUser", currentUser._id);
-    
+
     socket.current.on("getUsers", (users) => {
       setOnlineUsersId(users.map((u) => u.toString()));
     });
@@ -49,18 +45,16 @@ export default function ChatLayout() {
       setChatRooms((prev) =>
         prev.map((room) =>
           room._id === data.chatRoomId
-            ? { ...room, lastMessage: data.newLastMessage || room.lastMessage } 
+            ? { ...room, lastMessage: data.newLastMessage || room.lastMessage }
             : room
         )
       );
     });
 
-    // ✅ THÊM TAI NGHE: Lắng nghe khi được ai đó thêm vào nhóm mới
     socket.current.on("newChatRoom", (newRoom) => {
       setChatRooms((prev) => {
-        // Kiểm tra xem phòng đã có chưa để tránh trùng lặp
         if (prev.some((room) => room._id === newRoom._id)) return prev;
-        return [newRoom, ...prev]; // Đẩy phòng mới lên đầu danh sách
+        return [newRoom, ...prev];
       });
     });
 
@@ -88,19 +82,21 @@ export default function ChatLayout() {
   };
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-white z-10 w-full -mt-4">
-      <Header />
+    // ⚠️ QUAN TRỌNG: h-screen và overflow-hidden giúp bao bọc toàn bộ khung chat vừa khít màn hình
+    <div className="flex flex-col h-screen w-full bg-white overflow-hidden">
 
-      <div className="flex-1 flex flex-col lg:flex-row w-full">
+      <div className="shrink-0">
+        <Header />
+      </div>
+
+      <div className="flex-1 min-h-0 flex overflow-hidden lg:flex-row w-full">
+        {/* CỘT DANH SÁCH USER */}
         <div className={`
           ${currentChat ? 'hidden lg:flex' : 'flex'} 
-          w-full lg:w-1/3 flex-col border-r bg-white h-[calc(100vh-0px)]
+          w-full lg:w-1/3 flex-col border-r bg-white h-full min-h-0
         `}>
-
-          {/* HEADER FIXED */}
           <div className="p-3 border-b flex gap-2 bg-white z-10 shrink-0">
             <SearchUsers handleSearch={setSearchQuery} />
-
             <button
               onClick={() => setShowGroupModal(true)}
               className="bg-blue-600 text-white px-3 py-2 rounded text-sm whitespace-nowrap"
@@ -109,8 +105,7 @@ export default function ChatLayout() {
             </button>
           </div>
 
-          {/* SCROLL AREA */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             <AllUsers
               users={users}
               chatRooms={chatRooms}
@@ -123,10 +118,10 @@ export default function ChatLayout() {
           </div>
         </div>
 
-        {/* RIGHT CHAT ROOM */}
+        {/* CỘT KHUNG CHAT */}
         <div className={`
           ${!currentChat ? 'hidden lg:flex' : 'flex'} 
-          flex-1 bg-gray-50 flex-col
+          flex-1 min-w-0 min-h-0 overflow-hidden bg-gray-50 flex-col
         `}>
           {currentChat ? (
             <ChatRoom
@@ -142,6 +137,7 @@ export default function ChatLayout() {
             <Welcome />
           )}
         </div>
+
       </div>
 
       {showGroupModal && (
