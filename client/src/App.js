@@ -1,69 +1,92 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   useLocation,
-  Navigate
-} from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+  Navigate,
+} from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 
-import HomeScreen from './pages/HomeScreen';
-import ProductScreen from './pages/ProductScreen';
-import CartScreen from './pages/CartScreen';
-import LoginScreen from './pages/LoginScreen';
-import RegisterScreen from './pages/RegisterScreen';
-import ProfileScreen from './pages/ProfileScreen';
-import ShippingScreen from './pages/ShippingScreen';
-import PaymentScreen from './pages/PaymentScreen';
-import PlaceOrderScreen from './pages/PlaceOrderScreen';
-import OrderScreen from './pages/OrderScreen';
-import UserListScreen from './pages/UserListScreen';
-import UserEditScreen from './pages/UserEditScreen';
-import ProductListScreen from './pages/ProductListScreen';
-import ProductEditScreen from './pages/ProductEditScreen';
-import OrderListScreen from './pages/OrderListScreen';
-import DiscountListScreen from './pages/DiscountListScreen';
-import BuyOrdersScreen from './pages/BuyOrdersScreen';
-import SellOrdersScreen from './pages/SellOrdersScreen';
-import AdminProductList from './pages/AdminProductList';
-import ChatLayout from './components/ChatLayout';
-import Chatbot from './Chatbot';
+import HomeScreen from "./pages/HomeScreen";
+import ProductScreen from "./pages/ProductScreen";
+import CartScreen from "./pages/CartScreen";
+import LoginScreen from "./pages/LoginScreen";
+import RegisterScreen from "./pages/RegisterScreen";
+import ProfileScreen from "./pages/ProfileScreen";
+import ShippingScreen from "./pages/ShippingScreen";
+import PaymentScreen from "./pages/PaymentScreen";
+import PlaceOrderScreen from "./pages/PlaceOrderScreen";
+import OrderScreen from "./pages/OrderScreen";
+import UserListScreen from "./pages/UserListScreen";
+import UserEditScreen from "./pages/UserEditScreen";
+import ProductListScreen from "./pages/ProductListScreen";
+import ProductEditScreen from "./pages/ProductEditScreen";
+import OrderListScreen from "./pages/OrderListScreen";
+import DiscountListScreen from "./pages/DiscountListScreen";
+import BuyOrdersScreen from "./pages/BuyOrdersScreen";
+import SellOrdersScreen from "./pages/SellOrdersScreen";
+import AdminProductList from "./pages/AdminProductList";
+import ChatLayout from "./components/ChatLayout";
+import Chatbot from "./Chatbot";
 
-import { AuthProvider } from './contexts/AuthContext';
-import { NavBar } from './layout/NavBar';
-import Footer from './layout/Footer';
+import { AuthProvider } from "./contexts/AuthContext";
+import { NavBar } from "./layout/NavBar";
+import Footer from "./layout/Footer";
 
-import socket from './socket';
-import { addNotification } from './actions/notificationActions';
-import ForgotPassword from './layouts/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import DiscountCreateScreen from './pages/DiscountCreateScreen';
+import socket from "./socket";
+import { addNotification } from "./actions/notificationActions";
+import ForgotPassword from "./layouts/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import DiscountCreateScreen from "./pages/DiscountCreateScreen";
 
 const Header = () => {
   const location = useLocation();
 
-  if (location.pathname === '/chat') return null;
+  if (location.pathname === "/chat") return null;
 
   return <NavBar />;
 };
 
 const LayoutWrapper = ({ children }) => {
   const location = useLocation();
+  const isChat = location.pathname === "/chat";
 
-  const isChat = location.pathname === '/chat';
+  const [appHeight, setAppHeight] = useState(window.innerHeight);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      setAppHeight(window.innerHeight);
+    };
+
+    updateHeight();
+
+    window.addEventListener("resize", updateHeight);
+    window.addEventListener("orientationchange", updateHeight);
+
+    return () => {
+      window.removeEventListener("resize", updateHeight);
+      window.removeEventListener("orientationchange", updateHeight);
+    };
+  }, []);
 
   return (
     <>
       <Header />
 
       <main
-        className="overflow-hidden"
-        style={{
-          height: "100dvh",
-          paddingTop: 0,
-          margin: 0,
-        }}
+        style={
+          isChat
+            ? {
+                height: `${appHeight}px`,
+                overflow: "hidden",
+                margin: 0,
+                padding: 0,
+              }
+            : {
+                paddingTop: "120px",
+              }
+        }
       >
         {children}
       </main>
@@ -81,14 +104,14 @@ const App = () => {
     if (!userInfo) return;
 
     socket.connect();
-    socket.emit('addUser', userInfo._id);
+    socket.emit("addUser", userInfo._id);
 
-    socket.on('newNotification', (notification) => {
+    socket.on("newNotification", (notification) => {
       dispatch(addNotification(notification));
     });
 
     return () => {
-      socket.off('newNotification');
+      socket.off("newNotification");
       socket.disconnect();
     };
   }, [userInfo, dispatch]);
@@ -109,31 +132,50 @@ const App = () => {
             <Route path="/placeorder" element={<PlaceOrderScreen />} />
             <Route path="/order/:id" element={<OrderScreen />} />
 
-            {/* Admin Routes */}
             <Route path="/admin/userlist" element={<UserListScreen />} />
             <Route path="/admin/user/:id/edit" element={<UserEditScreen />} />
             <Route path="/admin/orderlist" element={<OrderListScreen />} />
             <Route path="/admin/productlist" element={<AdminProductList />} />
-            <Route path="/admin/product/:id/edit" element={<ProductEditScreen />} />
+            <Route
+              path="/admin/product/:id/edit"
+              element={<ProductEditScreen />}
+            />
 
-            {/* Seller Routes */}
-            <Route path="/seller/products" element={<ProductListScreen />} />
-            <Route path="/seller/products/:id/edit" element={<ProductEditScreen />} />
+            <Route
+              path="/seller/products"
+              element={<ProductListScreen />}
+            />
+            <Route
+              path="/seller/products/:id/edit"
+              element={<ProductEditScreen />}
+            />
             <Route path="/seller/orders" element={<SellOrdersScreen />} />
 
-            {/* General Routes */}
             <Route path="/search/:keyword" element={<HomeScreen />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:id/:token" element={<ResetPassword />} />
+            <Route
+              path="/forgot-password"
+              element={<ForgotPassword />}
+            />
+            <Route
+              path="/reset-password/:id/:token"
+              element={<ResetPassword />}
+            />
             <Route path="/orders" element={<BuyOrdersScreen />} />
             <Route path="/chatbot" element={<Chatbot />} />
-            <Route path="/discounts" element={<DiscountListScreen />} />
-            <Route path="/admin/discount/create" element={<DiscountCreateScreen />} />
+            <Route
+              path="/discounts"
+              element={<DiscountListScreen />}
+            />
+            <Route
+              path="/admin/discount/create"
+              element={<DiscountCreateScreen />}
+            />
 
-            {/* Chat Route */}
             <Route
               path="/chat"
-              element={userInfo ? <ChatLayout /> : <Navigate to="/login" />}
+              element={
+                userInfo ? <ChatLayout /> : <Navigate to="/login" />
+              }
             />
           </Routes>
         </LayoutWrapper>
