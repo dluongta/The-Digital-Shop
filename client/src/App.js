@@ -58,17 +58,12 @@ const LayoutWrapper = ({ children }) => {
       <Header />
 
       <main
-        className={isChat ? 'overflow-hidden' : 'pt-5 mt-5'}
-        style={
-          isChat
-            ? {
-              height: "100dvh",
-              margin: 0,
-            }
-            : {
-              paddingTop: "120px",
-            }
-        }
+        className="overflow-hidden"
+        style={{
+          height: "100dvh",
+          paddingTop: 0,
+          margin: 0,
+        }}
       >
         {children}
       </main>
