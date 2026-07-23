@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react"; // Thêm useRef
 import { useApi } from "../services/ChatService";
 import Message from "./Message";
 import Contact from "./Contact";
@@ -8,6 +8,9 @@ export default function ChatRoom({
   currentChat, setCurrentChat, setChatRooms, currentUser, socket, users, onlineUsersId,
 }) {
   const [messages, setMessages] = useState([]);
+  
+  // 1. Khởi tạo ref để điều khiển cuộn
+  const scrollRef = useRef(null);
 
   const { getMessagesOfChatRoom, sendMessage, leaveGroupChat, revokeMessageApi } = useApi();
 
@@ -20,8 +23,6 @@ export default function ChatRoom({
         const res = await getMessagesOfChatRoom(currentChat._id);
         const data = Array.isArray(res) ? res : [];
         
-        // API trả về (createdAt: -1) nên mới nhất đã ở đầu mảng.
-        // Ta KHÔNG DÙNG REVERSE NỮA để tin nhắn mới nhất xuất hiện TRÊN CÙNG màn hình.
         setMessages(data);
       } catch (err) {
         console.error("Lỗi khi tải tin nhắn:", err);
@@ -69,7 +70,7 @@ export default function ChatRoom({
     return <Contact chatRoom={currentChat} currentUser={currentUser} onlineUsersId={onlineUsersId} users={users} />;
   }, [currentChat, users, onlineUsersId]);
 
-  // ================= 3. SOCKET NHẬN TIN NHẮN (ĐẨY LÊN TRÊN CÙNG) =================
+  // ================= 3. SOCKET NHẬN TIN NHẮN =================
   useEffect(() => {
     if (!socket || !currentChat?._id) return;
     socket.emit("joinRoom", currentChat._id);
@@ -79,8 +80,6 @@ export default function ChatRoom({
 
       setMessages((prev) => {
         if (prev.some((m) => m._id === data._id)) return prev;
-
-        // Bỏ tin mới vào ĐẦU mảng
         return [
           {
             _id: data._id || Date.now(),
@@ -92,6 +91,11 @@ export default function ChatRoom({
           ...prev
         ];
       });
+
+      // (Tuỳ chọn) Cuộn lên trên cùng nếu đang mở chat và có tin nhắn mới đến
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+      }
     };
 
     const handleRevoke = (data) => {
@@ -109,7 +113,7 @@ export default function ChatRoom({
     };
   }, [socket, currentChat]);
 
-  // ================= 4. GỬI & THU HỒI TIN NHẮN (ĐẨY LÊN TRÊN CÙNG) =================
+  // ================= 4. GỬI & THU HỒI TIN NHẮN =================
   const handleFormSubmit = async (message) => {
     if (!message.trim()) return;
     try {
@@ -120,7 +124,6 @@ export default function ChatRoom({
         _id: res._id, chatRoomId: currentChat._id, senderId: currentUser._id, message, createdAt: res.createdAt
       });
 
-      // Bỏ tin mình vừa gửi vào ĐẦU mảng
       setMessages((prev) => [res, ...prev]);
 
       setChatRooms((prev) =>
@@ -130,6 +133,14 @@ export default function ChatRoom({
             : room
         )
       );
+
+      // 2. Cuộn mượt lên trên cùng sau khi gửi tin nhắn
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }, 50); // Timeout ngắn để đợi React render phần tử DOM mới xong
+      
     } catch (error) {
       console.error("Lỗi gửi tin nhắn:", error);
     }
@@ -140,8 +151,6 @@ export default function ChatRoom({
       await revokeMessageApi(messageId, currentUser._id);
       setMessages((prev) => {
         const updatedMessages = prev.map((m) => m._id === messageId ? { ...m, isDeleted: true } : m);
-        
-        // Tin mới nhất giờ luôn nằm ở vị trí index 0
         const latestMsg = updatedMessages[0];
 
         if (latestMsg) {
@@ -160,7 +169,6 @@ export default function ChatRoom({
 
   // ================= RENDER =================
   return (
-    // ⚠️ Khóa cứng h-full vào thẻ mẹ, không dùng calc() 
     <div className="flex flex-col w-full h-full overflow-hidden bg-white">
       
       {/* HEADER */}
@@ -173,11 +181,13 @@ export default function ChatRoom({
         <div className="flex-1 min-w-0">{headerContent}</div>
       </div>
 
-      {/* KHUNG TIN NHẮN (Cuộn bên trong) */}
-      <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50 p-4">
+      {/* KHUNG TIN NHẮN */}
+      {/* 3. Bổ sung thuộc tính ref={scrollRef} vào container chứa thanh cuộn */}
+      <div 
+        ref={scrollRef} 
+        className="flex-1 min-h-0 overflow-y-auto bg-gray-50 p-4"
+      >
         <div className="flex flex-col gap-3">
-          
-          {/* Mảng xuất ra từ index 0, tức tin mới nhất sẽ hiển thị trên cùng */}
           {messages.map((m) => (
             m?._id && (
               <Message
@@ -189,11 +199,10 @@ export default function ChatRoom({
               />
             )
           ))}
-          
         </div>
       </div>
 
-      {/* INPUT FORM (Đóng cứng ở đáy) */}
+      {/* INPUT FORM */}
       <div className="p-3 border-t bg-white shrink-0 z-10">
         <ChatForm handleFormSubmit={handleFormSubmit} />
       </div>
