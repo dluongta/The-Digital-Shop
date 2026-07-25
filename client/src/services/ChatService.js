@@ -104,7 +104,6 @@ export const useApi = () => {
     }
   };
 
-  // ĐÃ SỬA: Thêm baseURL và Header
   const markMessagesAsRead = async (chatRoomId, userId) => {
     const header = createHeader();
     try {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react"; // Thêm useRef
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useApi } from "../services/ChatService";
 import Message from "./Message";
 import Contact from "./Contact";
@@ -9,12 +9,13 @@ export default function ChatRoom({
 }) {
   const [messages, setMessages] = useState([]);
   
-  // 1. Khởi tạo ref để điều khiển cuộn
+  // Thêm state để quản lý giới hạn số lượng tin nhắn hiển thị trên màn hình
+  const [visibleCount, setVisibleCount] = useState(10); 
+  
   const scrollRef = useRef(null);
-
   const { getMessagesOfChatRoom, sendMessage, leaveGroupChat, revokeMessageApi } = useApi();
 
-  // ================= 1. TẢI TẤT CẢ TIN NHẮN (MỚI NHẤT TRÊN CÙNG) =================
+  // ================= 1. TẢI TẤT CẢ TIN NHẮN =================
   useEffect(() => {
     if (!currentChat?._id) return;
 
@@ -22,8 +23,10 @@ export default function ChatRoom({
       try {
         const res = await getMessagesOfChatRoom(currentChat._id);
         const data = Array.isArray(res) ? res : [];
-        
         setMessages(data);
+        
+        // Reset lại số lượng hiển thị bằng 10 mỗi khi đổi phòng chat
+        setVisibleCount(10);
       } catch (err) {
         console.error("Lỗi khi tải tin nhắn:", err);
       }
@@ -91,8 +94,10 @@ export default function ChatRoom({
           ...prev
         ];
       });
+      
+      // Khi có tin nhắn mới, tăng giới hạn hiển thị lên 1 để tin nhắn cũ không bị đẩy mất khỏi danh sách đang xem
+      setVisibleCount((prev) => prev + 1);
 
-      // (Tuỳ chọn) Cuộn lên trên cùng nếu đang mở chat và có tin nhắn mới đến
       if (scrollRef.current) {
         scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -125,6 +130,9 @@ export default function ChatRoom({
       });
 
       setMessages((prev) => [res, ...prev]);
+      
+      // Tăng số lượng hiển thị thêm 1 vì có thêm 1 tin nhắn mới
+      setVisibleCount((prev) => prev + 1); 
 
       setChatRooms((prev) =>
         prev.map((room) =>
@@ -134,12 +142,11 @@ export default function ChatRoom({
         )
       );
 
-      // 2. Cuộn mượt lên trên cùng sau khi gửi tin nhắn
       setTimeout(() => {
         if (scrollRef.current) {
           scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
         }
-      }, 50); // Timeout ngắn để đợi React render phần tử DOM mới xong
+      }, 50);
       
     } catch (error) {
       console.error("Lỗi gửi tin nhắn:", error);
@@ -167,6 +174,22 @@ export default function ChatRoom({
     }
   };
 
+  // ================= 5. HÀM XỬ LÝ CUỘN ĐỂ LOAD THÊM TIN NHẮN =================
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    
+    // Nếu người dùng cuộn xuống gần cuối màn hình (cách đáy khoảng 20px)
+    if (scrollTop + clientHeight >= scrollHeight - 20) {
+      if (visibleCount < messages.length) {
+        setVisibleCount((prev) => prev + 10); // Tăng giới hạn lên thêm 10 tin nhắn
+      }
+    }
+  };
+
+  // Cắt mảng tin nhắn dựa trên số lượng limit hiện tại
+  const visibleMessages = messages.slice(0, visibleCount);
+
   // ================= RENDER =================
   return (
     <div className="flex flex-col w-full h-full overflow-hidden bg-white">
@@ -182,13 +205,13 @@ export default function ChatRoom({
       </div>
 
       {/* KHUNG TIN NHẮN */}
-      {/* 3. Bổ sung thuộc tính ref={scrollRef} vào container chứa thanh cuộn */}
       <div 
         ref={scrollRef} 
+        onScroll={handleScroll} // Bổ sung sự kiện onScroll
         className="flex-1 min-h-0 overflow-y-auto bg-gray-50 p-4"
       >
         <div className="flex flex-col gap-3">
-          {messages.map((m) => (
+          {visibleMessages.map((m) => ( // Render mảng tin nhắn đã giới hạn
             m?._id && (
               <Message
                 key={m._id}
@@ -199,6 +222,12 @@ export default function ChatRoom({
               />
             )
           ))}
+          {/* Hiển thị dòng text nếu đang load thêm hoặc đã hết tin */}
+          {visibleCount < messages.length ? (
+             <div className="text-center text-xs text-gray-400 my-2">Cuộn xuống để xem thêm...</div>
+          ) : (
+             messages.length > 0 && <div className="text-center text-xs text-gray-400 my-2">Đã hết tin nhắn</div>
+          )}
         </div>
       </div>
 
