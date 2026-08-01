@@ -105,7 +105,7 @@ export default function ChatRoom({
             {isOnline ? (
               <span className="text-green-500 font-medium">Đang Online</span>
             ) : otherUser?.lastSeen ? (
-              `Online ${timeAgo(otherUser.lastSeen)}`
+              `Hoạt động ${timeAgo(otherUser.lastSeen)}`
             ) : (
               "Ngoại tuyến"
             )}
