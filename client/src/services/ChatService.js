@@ -161,10 +161,43 @@ export const useApi = () => {
   const dissolveGroupApi = async (roomId, adminId) => {
     const header = createHeader();
     try {
-      const res = await axios.delete(`${baseURL}/room/group/dissolve`, { 
-        ...header, 
-        data: { roomId, adminId } 
+      const res = await axios.delete(`${baseURL}/room/group/dissolve`, {
+        ...header,
+        data: { roomId, adminId }
       });
+      return res.data;
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  };
+
+  const transferAdminApi = async (roomId, currentAdminId, newAdminId) => {
+    const header = createHeader();
+    try {
+      const res = await axios.put(`${baseURL}/room/group/transfer-admin`, { roomId, currentAdminId, newAdminId }, header);
+      return res.data;
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  };
+
+  const addDeputyApi = async (roomId, adminId, deputyId) => {
+    const header = createHeader();
+    try {
+      const res = await axios.put(`${baseURL}/room/group/add-deputy`, { roomId, adminId, deputyId }, header);
+      return res.data;
+    } catch (e) {
+      console.error(e);
+      throw e;
+    }
+  };
+
+  const removeDeputyApi = async (roomId, adminId, deputyId) => {
+    const header = createHeader();
+    try {
+      const res = await axios.put(`${baseURL}/room/group/remove-deputy`, { roomId, adminId, deputyId }, header);
       return res.data;
     } catch (e) {
       console.error(e);
@@ -185,8 +218,11 @@ export const useApi = () => {
     markMessagesAsRead,
     leaveGroupChat,
     revokeMessageApi,
-    kickMemberApi,          
-    addMembersToGroupApi,   
-    dissolveGroupApi        
+    kickMemberApi,
+    addMembersToGroupApi,
+    dissolveGroupApi,
+    transferAdminApi,
+    addDeputyApi,
+    removeDeputyApi
   };
 };
