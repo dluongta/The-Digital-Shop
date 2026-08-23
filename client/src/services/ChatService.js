@@ -203,6 +203,15 @@ export const useApi = () => {
       console.error(e);
       throw e;
     }
+  };// Bổ sung vào danh sách return của useApi()
+  const acceptGroupInviteApi = async (roomId, userId) => {
+    const res = await axios.put(`/api/room/group/accept-invite`, { roomId, userId });
+    return res.data;
+  };
+
+  const rejectGroupInviteApi = async (roomId, userId) => {
+    const res = await axios.put(`/api/room/group/reject-invite`, { roomId, userId });
+    return res.data;
   };
 
   return {
@@ -223,6 +232,8 @@ export const useApi = () => {
     dissolveGroupApi,
     transferAdminApi,
     addDeputyApi,
-    removeDeputyApi
+    removeDeputyApi,
+    acceptGroupInviteApi,
+    rejectGroupInviteApi
   };
 };
