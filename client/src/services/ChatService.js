@@ -2,7 +2,7 @@ import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const baseURL = "http://localhost:5000/api";
+const baseURL = "https://the-digital-shop.onrender.com/api";
 
 export const useApi = () => {
   const { currentUser } = useAuth();
@@ -19,7 +19,7 @@ export const useApi = () => {
 
   const initiateSocketConnection = () => {
     const token = currentUser?.token;
-    const socket = io("http://localhost:5000", {
+    const socket = io("https://the-digital-shop.onrender.com/", {
       auth: { token },
     });
     return socket;
