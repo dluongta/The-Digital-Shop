@@ -2,7 +2,7 @@ import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const baseURL = "https://the-digital-shop.onrender.com/api";
+const baseURL = "http://localhost:5000/api";
 
 export const useApi = () => {
   const { currentUser } = useAuth();
@@ -19,7 +19,7 @@ export const useApi = () => {
 
   const initiateSocketConnection = () => {
     const token = currentUser?.token;
-    const socket = io("https://the-digital-shop.onrender.com/", {
+    const socket = io("http://localhost:5000", {
       auth: { token },
     });
     return socket;
@@ -203,7 +203,8 @@ export const useApi = () => {
       console.error(e);
       throw e;
     }
-  };// Bổ sung vào danh sách return của useApi()
+  };
+  // Bổ sung vào danh sách return của useApi()
   const acceptGroupInviteApi = async (roomId, userId) => {
     const res = await axios.put(`/api/room/group/accept-invite`, { roomId, userId });
     return res.data;
@@ -213,7 +214,15 @@ export const useApi = () => {
     const res = await axios.put(`/api/room/group/reject-invite`, { roomId, userId });
     return res.data;
   };
+ const acceptPrivateChatApi = async (roomId) => {
+  const res = await axios.put(`/api/room/accept-private`, { roomId });
+  return res.data;
+};
 
+ const rejectPrivateChatApi = async (roomId) => {
+  const res = await axios.delete(`/api/room/reject-private`, { data: { roomId } });
+  return res.data;
+};
   return {
     initiateSocketConnection,
     getAllUsers,
@@ -234,6 +243,8 @@ export const useApi = () => {
     addDeputyApi,
     removeDeputyApi,
     acceptGroupInviteApi,
-    rejectGroupInviteApi
+    rejectGroupInviteApi,
+    acceptPrivateChatApi,
+    rejectPrivateChatApi
   };
 };
