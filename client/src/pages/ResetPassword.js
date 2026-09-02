@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Message from "../components/Message";
 import axios from "axios";
+import Message from "../components/Message";
+import "./ResetPassword.css";
 
 const ResetPassword = () => {
   const { id, token } = useParams();
@@ -16,17 +17,18 @@ const ResetPassword = () => {
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
-    let timer;
+    if (!isSuccess) return;
 
-    if (isSuccess && countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1);
-      }, 1000);
-    } else if (isSuccess && countdown === 0) {
+    if (countdown === 0) {
       navigate("/login");
+      return;
     }
 
-    return () => clearInterval(timer);
+    const timer = setTimeout(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [isSuccess, countdown, navigate]);
 
   const handleSubmit = async (e) => {
@@ -52,7 +54,7 @@ const ResetPassword = () => {
       if (response.data.status === "Password Updated Succeeded") {
         setIsSuccess(true);
         setMessage(
-          "Đổi mật khẩu thành công! Đang chuyển hướng sau vài giây..."
+          "Đổi mật khẩu thành công! Đang chuyển hướng đến trang đăng nhập..."
         );
       } else {
         setMessage(response.data.status);
@@ -65,68 +67,67 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 flex items-center justify-center px-4 py-12">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-violet-600/30 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 w-72 h-72 -translate-x-1/2 -translate-y-1/2 bg-cyan-500/10 rounded-full blur-3xl" />
+    <div className="reset-page">
+      {/* Background */}
+      <div className="reset-bg">
+        <div className="reset-bg-circle reset-bg-circle-1"></div>
+        <div className="reset-bg-circle reset-bg-circle-2"></div>
       </div>
 
-      {/* Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.07] backdrop-blur-2xl shadow-2xl shadow-black/40 p-7 sm:p-9">
+      <main className="reset-main">
+        <div className="reset-card">
 
-          {/* Top gradient line */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500" />
-
-          {/* Header */}
-          <div className="text-center mb-8">
+          {/* Logo / Icon */}
+          <div className="reset-header">
             <div
-              className={`mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg transition-all duration-500 ${
-                isSuccess
-                  ? "bg-emerald-500/20 shadow-emerald-500/20"
-                  : "bg-blue-500/20 shadow-blue-500/20"
+              className={`reset-icon ${
+                isSuccess ? "reset-icon-success" : ""
               }`}
             >
               {isSuccess ? (
-                <svg
-                  className="w-8 h-8 text-emerald-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg viewBox="0 0 24 24" fill="none">
                   <path
+                    d="M5 12.5L9.5 17L19 7"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"
                   />
                 </svg>
               ) : (
-                <svg
-                  className="w-8 h-8 text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                <svg viewBox="0 0 24 24" fill="none">
+                  <rect
+                    x="5"
+                    y="10"
+                    width="14"
+                    height="10"
+                    rx="2"
+                    stroke="currentColor"
                     strokeWidth="2"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v2h8z"
+                  />
+                  <path
+                    d="M8 10V7C8 4.79 9.79 3 12 3C14.21 3 16 4.79 16 7V10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                  <circle
+                    cx="12"
+                    cy="15"
+                    r="1"
+                    fill="currentColor"
                   />
                 </svg>
               )}
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+            <h1>
               {isSuccess
-                ? "Mật khẩu đã được cập nhật!"
+                ? "Mật khẩu đã được cập nhật"
                 : "Thiết lập mật khẩu mới"}
-            </h2>
+            </h1>
 
-            <p className="mt-3 text-sm leading-6 text-slate-400">
+            <p>
               {isSuccess
                 ? "Tài khoản của bạn đã được bảo mật bằng mật khẩu mới."
                 : "Tạo một mật khẩu mới để bảo vệ tài khoản của bạn."}
@@ -135,11 +136,7 @@ const ResetPassword = () => {
 
           {/* Message */}
           {message && (
-            <div
-              className={`mb-6 ${
-                isSuccess ? "" : "animate-[shake_0.4s_ease-in-out]"
-              }`}
-            >
+            <div className="reset-message">
               <Message
                 variant={
                   isSuccess || message.includes("thành công")
@@ -147,13 +144,11 @@ const ResetPassword = () => {
                     : "danger"
                 }
               >
-                <div className="flex items-center justify-between gap-2">
+                <div className="reset-message-content">
                   <span>{message}</span>
 
                   {isSuccess && (
-                    <span className="shrink-0 font-bold text-emerald-600">
-                      {countdown}s
-                    </span>
+                    <strong>{countdown}s</strong>
                   )}
                 </div>
               </Message>
@@ -162,205 +157,214 @@ const ResetPassword = () => {
 
           {/* Form */}
           {!isSuccess && (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* New password */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-200">
+            <form
+              className="reset-form"
+              onSubmit={handleSubmit}
+            >
+              {/* Password */}
+              <div className="reset-field">
+                <label htmlFor="password">
                   Mật khẩu mới
                 </label>
 
-                <div className="relative group">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <svg
-                      className="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                <div className="reset-input-wrapper">
+                  <span className="reset-input-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <rect
+                        x="5"
+                        y="10"
+                        width="14"
+                        height="10"
+                        rx="2"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      />
                       <path
+                        d="M8 10V7C8 4.79 9.79 3 12 3C14.21 3 16 4.79 16 7V10"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
                         strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v2h8z"
                       />
                     </svg>
-                  </div>
+                  </span>
 
                   <input
+                    id="password"
                     type="password"
                     required
+                    autoComplete="new-password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) =>
+                      setPassword(e.target.value)
+                    }
                     placeholder="Nhập mật khẩu mới"
-                    className="w-full rounded-xl border border-white/10 bg-slate-900/60 py-3.5 pl-12 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200 focus:border-blue-500/60 focus:bg-slate-900/80 focus:ring-4 focus:ring-blue-500/10"
                   />
                 </div>
               </div>
 
-              {/* Confirm password */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-200">
+              {/* Confirm Password */}
+              <div className="reset-field">
+                <label htmlFor="confirmPassword">
                   Xác nhận mật khẩu
                 </label>
 
-                <div className="relative group">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                    <svg
-                      className="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                <div className="reset-input-wrapper">
+                  <span className="reset-input-icon">
+                    <svg viewBox="0 0 24 24" fill="none">
                       <path
+                        d="M12 3L19 6V11C19 15.5 16.1 19.4 12 21C7.9 19.4 5 15.5 5 11V6L12 3Z"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinejoin="round"
+                      />
+                      <path
+                        d="M9 12L11 14L15 10"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622C17.176 19.29 21 14.591 21 9c0-.695-.059-1.376-.17-2.044z"
                       />
                     </svg>
-                  </div>
+                  </span>
 
                   <input
+                    id="confirmPassword"
                     type="password"
                     required
+                    autoComplete="new-password"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) =>
+                      setConfirmPassword(e.target.value)
+                    }
                     placeholder="Nhập lại mật khẩu"
-                    className="w-full rounded-xl border border-white/10 bg-slate-900/60 py-3.5 pl-12 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200 focus:border-blue-500/60 focus:bg-slate-900/80 focus:ring-4 focus:ring-blue-500/10"
                   />
                 </div>
               </div>
 
-              {/* Password hint */}
-              <div className="flex items-start gap-2 rounded-xl border border-blue-500/10 bg-blue-500/5 px-4 py-3">
-                <svg
-                  className="mt-0.5 h-4 w-4 shrink-0 text-blue-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+              {/* Password tip */}
+              <div className="reset-tip">
+                <div className="reset-tip-icon">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    />
+                    <path
+                      d="M12 10V16"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                    <circle
+                      cx="12"
+                      cy="7"
+                      r="1"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </div>
 
-                <p className="text-xs leading-5 text-slate-400">
-                  Hãy sử dụng mật khẩu đủ mạnh và không dùng lại mật khẩu ở
-                  những tài khoản khác.
+                <p>
+                  Sử dụng mật khẩu mạnh và không sử dụng lại
+                  mật khẩu ở những tài khoản khác.
                 </p>
               </div>
 
-              {/* Submit */}
+              {/* Button */}
               <button
                 type="submit"
+                className="reset-submit"
                 disabled={loading}
-                className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 via-blue-600 to-violet-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/30 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                {loading ? (
+                  <>
+                    <span className="reset-spinner"></span>
+                    <span>Đang cập nhật...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Cập nhật mật khẩu</span>
 
-                <span className="relative flex items-center justify-center gap-2">
-                  {loading ? (
-                    <>
-                      <svg
-                        className="h-5 w-5 animate-spin"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                        />
-                      </svg>
-
-                      Đang cập nhật...
-                    </>
-                  ) : (
-                    <>
-                      Cập nhật mật khẩu
-
-                      <svg
-                        className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
-                        fill="none"
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M5 12H19"
                         stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M13 7l5 5m0 0l-5 5m5-5H6"
-                        />
-                      </svg>
-                    </>
-                  )}
-                </span>
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M13 6L19 12L13 18"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </>
+                )}
               </button>
             </form>
           )}
 
-          {/* Success countdown */}
+          {/* Success */}
           {isSuccess && (
-            <div className="mt-7">
-              <div className="mb-3 flex justify-between text-xs text-slate-400">
-                <span>Đang chuyển đến trang đăng nhập</span>
-                <span className="font-semibold text-emerald-400">
-                  {countdown}s
+            <div className="reset-success">
+              <div className="reset-success-info">
+                <span>
+                  Chuyển đến trang đăng nhập
                 </span>
+
+                <strong>{countdown}s</strong>
               </div>
 
-              <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="reset-progress">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all duration-1000 ease-linear"
                   style={{
                     width: `${(countdown / 5) * 100}%`,
                   }}
-                />
+                ></div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="reset-login-button"
+              >
+                Đăng nhập ngay
+              </button>
             </div>
           )}
 
-          {/* Footer */}
-          <div className="mt-8 text-center">
-            <p className="text-xs text-slate-500">
-              🔒 Thông tin của bạn được bảo mật an toàn
-            </p>
+          {/* Security */}
+          <div className="reset-security">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 3L19 6V11C19 15.5 16.1 19.4 12 21C7.9 19.4 5 15.5 5 11V6L12 3Z"
+                stroke="currentColor"
+                strokeWidth="1.7"
+              />
+              <path
+                d="M9 12L11 14L15 10"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+
+            <span>
+              Thông tin của bạn được bảo mật an toàn
+            </span>
           </div>
         </div>
 
-        {/* Bottom decoration */}
-        <div className="mt-5 text-center">
-          <p className="text-xs text-slate-600">
-            © {new Date().getFullYear()} • Secure Account
-          </p>
+        <div className="reset-copyright">
+          © {new Date().getFullYear()} The Shop. All rights reserved.
         </div>
-      </div>
-
-      {/* Shake animation */}
-      <style>{`
-        @keyframes shake {
-          0%, 100% {
-            transform: translateX(0);
-          }
-          20%, 60% {
-            transform: translateX(-5px);
-          }
-          40%, 80% {
-            transform: translateX(5px);
-          }
-        }
-      `}</style>
+      </main>
     </div>
   );
 };
