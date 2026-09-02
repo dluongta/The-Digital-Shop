@@ -12,13 +12,12 @@ const ResetPassword = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // State quản lý việc đếm ngược
   const [isSuccess, setIsSuccess] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
-  // Xử lý đếm ngược khi isSuccess = true
   useEffect(() => {
     let timer;
+
     if (isSuccess && countdown > 0) {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
@@ -26,11 +25,13 @@ const ResetPassword = () => {
     } else if (isSuccess && countdown === 0) {
       navigate("/login");
     }
+
     return () => clearInterval(timer);
   }, [isSuccess, countdown, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setMessage("");
 
     if (password !== confirmPassword) {
@@ -41,13 +42,18 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`/api/reset-password/${id}/${token}`, {
-        password,
-      });
+      const response = await axios.post(
+        `/api/reset-password/${id}/${token}`,
+        {
+          password,
+        }
+      );
 
       if (response.data.status === "Password Updated Succeeded") {
         setIsSuccess(true);
-        setMessage("Đổi mật khẩu thành công! Đang chuyển hướng...");
+        setMessage(
+          "Đổi mật khẩu thành công! Đang chuyển hướng sau vài giây..."
+        );
       } else {
         setMessage(response.data.status);
       }
@@ -59,105 +65,302 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      
-      {/* Background Decorative Blobs */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-      <div className="absolute -bottom-8 left-1/3 w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-4000"></div>
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 flex items-center justify-center px-4 py-12">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-violet-600/30 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 w-72 h-72 -translate-x-1/2 -translate-y-1/2 bg-cyan-500/10 rounded-full blur-3xl" />
+      </div>
 
-      <div className="max-w-md w-full space-y-8 bg-white/80 backdrop-blur-xl p-10 rounded-[2rem] shadow-2xl border border-white/50 relative z-10 transition-all duration-500 hover:shadow-blue-500/10">
-        
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-6 mb-6">
-            <svg className="w-8 h-8 text-white transform rotate-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-            </svg>
-          </div>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-            Thiết lập mật khẩu mới
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-500">
-            Vui lòng nhập mật khẩu mới cho tài khoản của bạn.
-          </p>
-        </div>
+      {/* Card */}
+      <div className="relative z-10 w-full max-w-md">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.07] backdrop-blur-2xl shadow-2xl shadow-black/40 p-7 sm:p-9">
 
-        {message && (
-          <div className={`transition-all duration-300 ${isSuccess ? "scale-100" : "animate-pulse"}`}>
-            <Message variant={isSuccess || message.includes("thành công") ? 'success' : 'danger'}>
-              {message} {isSuccess && <span className="font-bold ml-1">({countdown}s)</span>}
-            </Message>
-          </div>
-        )}
+          {/* Top gradient line */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500" />
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Mật khẩu mới</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.071 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
-                  </svg>
-                </div>
-                <input
-                  type="password"
-                  required
-                  disabled={isSuccess}
-                  className="appearance-none block w-full pl-11 pr-4 py-3.5 border border-gray-200 rounded-xl text-gray-900 bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
-                  placeholder="Nhập mật khẩu mới..."
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Xác nhận mật khẩu</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <input
-                  type="password"
-                  required
-                  disabled={isSuccess}
-                  className="appearance-none block w-full pl-11 pr-4 py-3.5 border border-gray-200 rounded-xl text-gray-900 bg-gray-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
-                  placeholder="Nhập lại mật khẩu..."
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={loading || isSuccess}
-              className={`group relative w-full flex justify-center items-center py-3.5 px-4 border border-transparent text-sm font-bold rounded-xl text-white transition-all transform active:scale-95 ${
-                loading || isSuccess
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-xl hover:-translate-y-0.5"
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div
+              className={`mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg transition-all duration-500 ${
+                isSuccess
+                  ? "bg-emerald-500/20 shadow-emerald-500/20"
+                  : "bg-blue-500/20 shadow-blue-500/20"
               }`}
             >
-              {loading ? (
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              {isSuccess ? (
+                <svg
+                  className="w-8 h-8 text-emerald-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
-              ) : isSuccess ? (
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              ) : (
+                <svg
+                  className="w-8 h-8 text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v2h8z"
+                  />
                 </svg>
-              ) : null}
-              {loading ? "Đang xử lý..." : isSuccess ? "Đã cập nhật" : "Cập nhật mật khẩu"}
-            </button>
+              )}
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              {isSuccess
+                ? "Mật khẩu đã được cập nhật!"
+                : "Thiết lập mật khẩu mới"}
+            </h2>
+
+            <p className="mt-3 text-sm leading-6 text-slate-400">
+              {isSuccess
+                ? "Tài khoản của bạn đã được bảo mật bằng mật khẩu mới."
+                : "Tạo một mật khẩu mới để bảo vệ tài khoản của bạn."}
+            </p>
           </div>
-        </form>
+
+          {/* Message */}
+          {message && (
+            <div
+              className={`mb-6 ${
+                isSuccess ? "" : "animate-[shake_0.4s_ease-in-out]"
+              }`}
+            >
+              <Message
+                variant={
+                  isSuccess || message.includes("thành công")
+                    ? "success"
+                    : "danger"
+                }
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span>{message}</span>
+
+                  {isSuccess && (
+                    <span className="shrink-0 font-bold text-emerald-600">
+                      {countdown}s
+                    </span>
+                  )}
+                </div>
+              </Message>
+            </div>
+          )}
+
+          {/* Form */}
+          {!isSuccess && (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* New password */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-200">
+                  Mật khẩu mới
+                </label>
+
+                <div className="relative group">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg
+                      className="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v2h8z"
+                      />
+                    </svg>
+                  </div>
+
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Nhập mật khẩu mới"
+                    className="w-full rounded-xl border border-white/10 bg-slate-900/60 py-3.5 pl-12 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200 focus:border-blue-500/60 focus:bg-slate-900/80 focus:ring-4 focus:ring-blue-500/10"
+                  />
+                </div>
+              </div>
+
+              {/* Confirm password */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-200">
+                  Xác nhận mật khẩu
+                </label>
+
+                <div className="relative group">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                    <svg
+                      className="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622C17.176 19.29 21 14.591 21 9c0-.695-.059-1.376-.17-2.044z"
+                      />
+                    </svg>
+                  </div>
+
+                  <input
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Nhập lại mật khẩu"
+                    className="w-full rounded-xl border border-white/10 bg-slate-900/60 py-3.5 pl-12 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all duration-200 focus:border-blue-500/60 focus:bg-slate-900/80 focus:ring-4 focus:ring-blue-500/10"
+                  />
+                </div>
+              </div>
+
+              {/* Password hint */}
+              <div className="flex items-start gap-2 rounded-xl border border-blue-500/10 bg-blue-500/5 px-4 py-3">
+                <svg
+                  className="mt-0.5 h-4 w-4 shrink-0 text-blue-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+
+                <p className="text-xs leading-5 text-slate-400">
+                  Hãy sử dụng mật khẩu đủ mạnh và không dùng lại mật khẩu ở
+                  những tài khoản khác.
+                </p>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-500 via-blue-600 to-violet-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-blue-600/30 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+
+                <span className="relative flex items-center justify-center gap-2">
+                  {loading ? (
+                    <>
+                      <svg
+                        className="h-5 w-5 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+
+                      Đang cập nhật...
+                    </>
+                  ) : (
+                    <>
+                      Cập nhật mật khẩu
+
+                      <svg
+                        className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    </>
+                  )}
+                </span>
+              </button>
+            </form>
+          )}
+
+          {/* Success countdown */}
+          {isSuccess && (
+            <div className="mt-7">
+              <div className="mb-3 flex justify-between text-xs text-slate-400">
+                <span>Đang chuyển đến trang đăng nhập</span>
+                <span className="font-semibold text-emerald-400">
+                  {countdown}s
+                </span>
+              </div>
+
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all duration-1000 ease-linear"
+                  style={{
+                    width: `${(countdown / 5) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-xs text-slate-500">
+              🔒 Thông tin của bạn được bảo mật an toàn
+            </p>
+          </div>
+        </div>
+
+        {/* Bottom decoration */}
+        <div className="mt-5 text-center">
+          <p className="text-xs text-slate-600">
+            © {new Date().getFullYear()} • Secure Account
+          </p>
+        </div>
       </div>
+
+      {/* Shake animation */}
+      <style>{`
+        @keyframes shake {
+          0%, 100% {
+            transform: translateX(0);
+          }
+          20%, 60% {
+            transform: translateX(-5px);
+          }
+          40%, 80% {
+            transform: translateX(5px);
+          }
+        }
+      `}</style>
     </div>
   );
 };
