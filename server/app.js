@@ -105,8 +105,7 @@ app.post("/api/forgot-password", asyncHandler(async (req, res) => {
               </div>
               
               <div style="font-size:16px; line-height:1.7; color:#444444; margin-bottom:25px;">
-                Chào bạn, <br><br>
-                Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn tại <strong>The Digital Shop</strong>. Vui lòng nhấn vào nút bên dưới để thiết lập mật khẩu mới (Liên kết này chỉ có hiệu lực trong vòng <strong>10 phút</strong>).
+                Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn tại <strong style="color:#0d6efd;>The Digital Shop</strong>. Vui lòng nhấn vào nút bên dưới để thiết lập mật khẩu mới (Liên kết này chỉ có hiệu lực trong vòng <strong>10 phút</strong>).
               </div>
 
               <!-- BUTTON -->
@@ -129,7 +128,7 @@ app.post("/api/forgot-password", asyncHandler(async (req, res) => {
               <!-- DIVIDER -->
               <div style="border-top:1px solid #e5e5e5; margin:28px 0 20px 0;"></div>
 
-              <div style="font-size:15px; line-height:1.6; color:#777777;">
+              <div style="font-size:14px; line-height:1.6; color:#777777;">
                 Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này. Tài khoản của bạn vẫn an toàn và bạn không cần thực hiện thêm bất kỳ thao tác nào.
               </div>
             </td>
