@@ -71,7 +71,7 @@ app.post("/api/forgot-password", asyncHandler(async (req, res) => {
       to: cleanEmail,
       subject: "Khôi phục mật khẩu - The Digital Shop",
       html: `
-      <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
