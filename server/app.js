@@ -70,7 +70,285 @@ app.post("/api/forgot-password", asyncHandler(async (req, res) => {
     await sendEmail({
       to: cleanEmail,
       subject: "Khôi phục mật khẩu - The Digital Shop",
-      html: `<h3>Reset Link: <a href="${link}">${link}</a></h3>`,
+      html: `
+      <!DOCTYPE html>
+      <html lang="vi">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Khôi phục mật khẩu</title>
+      </head>
+
+      <body style="
+        margin:0;
+        padding:0;
+        background-color:#f4f7fb;
+        font-family:Arial, Helvetica, sans-serif;
+        color:#333333;
+      ">
+
+        <table
+          width="100%"
+          cellpadding="0"
+          cellspacing="0"
+          border="0"
+          style="
+            background-color:#f4f7fb;
+            padding:35px 15px;
+          "
+        >
+      <tr>
+        <td align="center">
+
+          <!-- MAIN CONTAINER -->
+          <table
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="
+              max-width:600px;
+              background-color:#ffffff;
+              border-radius:14px;
+              overflow:hidden;
+              box-shadow:0 5px 25px rgba(0,0,0,0.08);
+            "
+          >
+
+            <!-- HEADER -->
+            <tr>
+              <td
+                align="center"
+                style="
+                  background:linear-gradient(135deg,#0d6efd,#0056d6);
+                  background-color:#0d6efd;
+                  padding:32px 20px;
+                "
+              >
+
+                <div style="
+                  color:#ffffff;
+                  font-size:26px;
+                  font-weight:bold;
+                  line-height:1.4;
+                ">
+                  The Digital Shop
+                </div>
+
+                <div style="
+                  color:#dbeafe;
+                  font-size:16px;
+                  margin-top:8px;
+                  line-height:1.5;
+                ">
+                  Khôi phục mật khẩu tài khoản
+                </div>
+
+              </td>
+            </tr>
+
+            <!-- CONTENT -->
+            <tr>
+              <td style="
+                padding:38px 35px 32px 35px;
+              ">
+
+                <!-- TITLE -->
+                <div style="
+                  font-size:24px;
+                  font-weight:bold;
+                  color:#1f2937;
+                  margin-bottom:18px;
+                  line-height:1.4;
+                ">
+                  🔐 Khôi phục mật khẩu
+                </div>
+
+                <!-- GREETING -->
+                <div style="
+                  font-size:16px;
+                  color:#4b5563;
+                  line-height:1.8;
+                  margin-bottom:18px;
+                ">
+                  Chúng tôi nhận được yêu cầu khôi phục mật khẩu
+                  cho tài khoản của bạn tại
+                  <strong style="color:#0d6efd;">
+                    The Digital Shop
+                  </strong>.
+                </div>
+
+                <div style="
+                  font-size:16px;
+                  color:#4b5563;
+                  line-height:1.8;
+                  margin-bottom:28px;
+                ">
+                  Nhấn vào nút bên dưới để tiến hành đặt lại mật khẩu mới.
+                </div>
+
+                <!-- BUTTON -->
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="margin:10px 0 28px 0;"
+                >
+                  <tr>
+                    <td align="center">
+
+                      <a
+                        href="${link}"
+                        target="_blank"
+                        style="
+                          display:inline-block;
+                          background-color:#0d6efd;
+                          color:#ffffff;
+                          text-decoration:none;
+                          font-size:17px;
+                          font-weight:bold;
+                          padding:15px 35px;
+                          border-radius:8px;
+                          box-shadow:0 4px 12px rgba(13,110,253,0.25);
+                        "
+                      >
+                        🔑 Đặt lại mật khẩu
+                      </a>
+
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- EXPIRE BOX -->
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  style="
+                    margin:25px 0;
+                    background-color:#fff8e6;
+                    border:1px solid #ffe08a;
+                    border-radius:9px;
+                  "
+                >
+                  <tr>
+                    <td style="
+                      padding:17px 18px;
+                      color:#856404;
+                      font-size:15px;
+                      line-height:1.6;
+                    ">
+                      ⏱️ <strong>Lưu ý:</strong>
+                      Liên kết khôi phục mật khẩu chỉ có hiệu lực trong
+                      <strong>10 phút</strong>.
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- FALLBACK LINK -->
+                <div style="
+                  font-size:14px;
+                  color:#6b7280;
+                  line-height:1.6;
+                  margin-top:25px;
+                ">
+                  Nếu nút phía trên không hoạt động, bạn có thể sao chép
+                  đường dẫn dưới đây và mở trong trình duyệt:
+                </div>
+
+                <div style="
+                  margin-top:10px;
+                  padding:14px;
+                  background-color:#f3f6fa;
+                  border-radius:7px;
+                  word-break:break-all;
+                  font-size:13px;
+                  line-height:1.6;
+                ">
+                  <a
+                    href="${link}"
+                    target="_blank"
+                    style="
+                      color:#0d6efd;
+                      text-decoration:none;
+                    "
+                  >
+                    ${link}
+                  </a>
+                </div>
+
+                <!-- SECURITY NOTE -->
+                <div style="
+                  border-top:1px solid #e5e7eb;
+                  margin:30px 0 20px 0;
+                "></div>
+
+                <div style="
+                  font-size:14px;
+                  color:#6b7280;
+                  line-height:1.7;
+                ">
+                  🛡️ Nếu bạn không yêu cầu khôi phục mật khẩu,
+                  vui lòng bỏ qua email này.
+                  Tài khoản của bạn vẫn an toàn và bạn không cần thực hiện
+                  thêm bất kỳ thao tác nào.
+                </div>
+
+              </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+              <td
+                align="center"
+                style="
+                  background-color:#f8f9fa;
+                  padding:22px 20px;
+                  border-top:1px solid #eeeeee;
+                "
+              >
+
+                <div style="
+                  font-size:15px;
+                  font-weight:bold;
+                  color:#6b7280;
+                  line-height:1.6;
+                ">
+                  The Digital Shop
+                </div>
+
+                <div style="
+                  font-size:13px;
+                  color:#9ca3af;
+                  margin-top:5px;
+                  line-height:1.5;
+                ">
+                  © ${new Date().getFullYear()} The Digital Shop
+                </div>
+
+                <div style="
+                  font-size:13px;
+                  color:#9ca3af;
+                  margin-top:5px;
+                  line-height:1.5;
+                ">
+                  Email tự động, vui lòng không trả lời email này.
+                </div>
+
+              </td>
+            </tr>
+
+          </table>
+
+        </td>
+      </tr>
+    </table>
+
+  </body>
+  </html>
+`,
     });
     res.json({ status: "Reset Link Sent" });
   } catch (error) {
