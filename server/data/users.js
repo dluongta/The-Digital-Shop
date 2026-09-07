@@ -39,7 +39,7 @@ for (let i = 1; i <= 100; i++) {
     role: 'buyer',
     isAdmin: false,
     isVerified: true,
-    password: ='123456',
+    password: '123456',
     discounts: ['DISCOUNT10', 'DISCOUNT20', 'SALE100'],
   users.push(newUser);
 }
