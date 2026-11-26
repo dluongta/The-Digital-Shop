@@ -260,6 +260,27 @@ const createOtpEmail = ({ name, otp, resend = false }) => {
 
 
 
+// const authUser = asyncHandler(async (req, res) => {
+//   const { email, password } = req.body;
+
+//   const user = await User.findOne({ email });
+
+//   if (user && (await user.matchPassword(password))) {
+//     res.json({
+//       _id: user._id,
+//       name: user.name,
+//       email: user.email,
+//       isAdmin: user.isAdmin,
+//       role: user.role,
+//       paypalClientId: user.paypalClientId,
+//       token: generateToken(user._id),
+//     });
+//   } else {
+//     res.status(401);
+//     throw new Error('Email hoặc mật khẩu không hợp lệ');
+//   }
+// });
+
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -289,7 +310,52 @@ const authUser = asyncHandler(async (req, res) => {
   }
 });
 
+// const registerUser = asyncHandler(async (req, res) => {
+//   const {
+//     name,
+//     email,
+//     password,
+//     role,
+//     paypalClientId,
+//   } = req.body;
 
+//   const cleanEmail = email.trim().toLowerCase();
+
+//   const userExists = await User.findOne({
+//     email: cleanEmail,
+//   });
+
+//   if (userExists) {
+//     res.status(400);
+//     throw new Error('Email này đã được sử dụng!');
+//   }
+
+//   // Mặc định cho xác thực luôn = true, không tạo OTP nữa
+//   const user = await User.create({
+//     name,
+//     email: cleanEmail,
+//     password,
+//     role,
+//     paypalClientId,
+//     isVerified: true,
+//   });
+
+//   if (!user) {
+//     res.status(400);
+//     throw new Error('Dữ liệu người dùng không hợp lệ');
+//   }
+
+//   // Trả về thông tin user kèm token luôn để Frontend tự đăng nhập
+//   res.status(201).json({
+//     _id: user._id,
+//     name: user.name,
+//     email: user.email,
+//     isAdmin: user.isAdmin,
+//     role: user.role,
+//     paypalClientId: user.paypalClientId,
+//     token: generateToken(user._id),
+//   });
+// });
 
 const registerUser = asyncHandler(async (req, res) => {
   const {
@@ -401,8 +467,6 @@ const registerUser = asyncHandler(async (req, res) => {
     );
   }
 });
-
-
 
 const verifyOTP = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
